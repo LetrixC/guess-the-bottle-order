@@ -1,0 +1,856 @@
+- imgBgGame:
+    Control: Image
+    Properties:
+      Image: =BgPattern
+      ImagePosition: =ImagePosition.Fill
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblFrameGame:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =RGBA(0, 0, 0, 0)
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =24
+      Y: =24
+      Width: =1318
+      Height: =720
+- imgLogoGame:
+    Control: Image
+    Properties:
+      Image: =NineDotsLogo
+      X: =56
+      Y: =44
+      Width: =40
+      Height: =40
+- lblModeGame:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(gMode = "SOLO", "1P SOLO · " & Upper(gP1.Name), If(gMode = "ONLINE", "2P ONLINE · ", "2P TEAM · ") & Upper(gTeam))
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =15
+      Color: =C_BlueLt
+      X: =108
+      Y: =44
+      Width: =520
+      Height: =40
+- lblTurnGame:
+    Control: Label
+    Properties:
+      Text: |-
+        ="TURN " & Text(gTurn, "00") & "/" & MaxTurns
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Color: =C_White
+      Fill: =C_Blue
+      Align: =Align.Center
+      X: =640
+      Y: =44
+      Width: =200
+      Height: =40
+- lblWho:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            gMode = "SOLO",
+            "▶ " & Upper(gP1.Name) & " - YOUR MOVE",
+            gMode = "ONLINE",
+            If(
+                gSeat = gMySeat,
+                "▶ YOUR MOVE, " & Upper(If(gMySeat = 1, gP1.Name, gP2.Name)) & " - NO TALKING!",
+                "WAITING FOR " & Upper(If(gSeat = 1, gP1.Name, gP2.Name)) & "..."
+            ),
+            "▶ P" & gSeat & ": " & Upper(If(gSeat = 1, gP1.Name, gP2.Name)) & " - NO TALKING!"
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Color: =C_Black
+      Fill: =C_White
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Black
+      PaddingLeft: =16
+      X: =56
+      Y: =100
+      Width: =784
+      Height: =56
+# ---------------- 4 answer slots (tap a slot to empty it) ----------------
+- lblSlotF1:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =If(locS1 = 0, C_Gold, C_Blue)
+      X: =56
+      Y: =176
+      Width: =190
+      Height: =250
+- lblSlotF2:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =If(locS1 <> 0 && locS2 = 0, C_Gold, C_Blue)
+      X: =254
+      Y: =176
+      Width: =190
+      Height: =250
+- lblSlotF3:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =If(locS1 <> 0 && locS2 <> 0 && locS3 = 0, C_Gold, C_Blue)
+      X: =452
+      Y: =176
+      Width: =190
+      Height: =250
+- lblSlotF4:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =If(locS1 <> 0 && locS2 <> 0 && locS3 <> 0 && locS4 = 0, C_Gold, C_Blue)
+      X: =650
+      Y: =176
+      Width: =190
+      Height: =250
+- imgSlot1:
+    Control: Image
+    Properties:
+      Image: =Coalesce(LookUp(BottleImg, Id = locS1, Img), EmptyBottle)
+      ImagePosition: =ImagePosition.Fit
+      OnSelect: |-
+        =UpdateContext({locS1: 0})
+      X: =91
+      Y: =186
+      Width: =120
+      Height: =206
+- imgSlot2:
+    Control: Image
+    Properties:
+      Image: =Coalesce(LookUp(BottleImg, Id = locS2, Img), EmptyBottle)
+      ImagePosition: =ImagePosition.Fit
+      OnSelect: |-
+        =UpdateContext({locS2: 0})
+      X: =289
+      Y: =186
+      Width: =120
+      Height: =206
+- imgSlot3:
+    Control: Image
+    Properties:
+      Image: =Coalesce(LookUp(BottleImg, Id = locS3, Img), EmptyBottle)
+      ImagePosition: =ImagePosition.Fit
+      OnSelect: |-
+        =UpdateContext({locS3: 0})
+      X: =487
+      Y: =186
+      Width: =120
+      Height: =206
+- imgSlot4:
+    Control: Image
+    Properties:
+      Image: =Coalesce(LookUp(BottleImg, Id = locS4, Img), EmptyBottle)
+      ImagePosition: =ImagePosition.Fit
+      OnSelect: |-
+        =UpdateContext({locS4: 0})
+      X: =685
+      Y: =186
+      Width: =120
+      Height: =206
+- lblSlotN1:
+    Control: Label
+    Properties:
+      Text: ="SLOT 1"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =56
+      Y: =394
+      Width: =190
+      Height: =28
+- lblSlotN2:
+    Control: Label
+    Properties:
+      Text: ="SLOT 2"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =254
+      Y: =394
+      Width: =190
+      Height: =28
+- lblSlotN3:
+    Control: Label
+    Properties:
+      Text: ="SLOT 3"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =452
+      Y: =394
+      Width: =190
+      Height: =28
+- lblSlotN4:
+    Control: Label
+    Properties:
+      Text: ="SLOT 4"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =650
+      Y: =394
+      Width: =190
+      Height: =28
+- lblPickTag:
+    Control: Label
+    Properties:
+      Text: ="▼ PICK A BOTTLE  ·  TAP A SLOT TO REMOVE IT"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =13
+      Color: =C_BlueLt
+      X: =56
+      Y: =436
+      Width: =784
+      Height: =34
+# ---------------- 6-bottle palette (fills the next empty slot) ----------------
+- lblPickF1:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =56
+      Y: =476
+      Width: =120
+      Height: =150
+- lblPickF2:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =188
+      Y: =476
+      Width: =120
+      Height: =150
+- lblPickF3:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =320
+      Y: =476
+      Width: =120
+      Height: =150
+- lblPickF4:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =452
+      Y: =476
+      Width: =120
+      Height: =150
+- lblPickF5:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =584
+      Y: =476
+      Width: =120
+      Height: =150
+- lblPickF6:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Dim
+      X: =716
+      Y: =476
+      Width: =120
+      Height: =150
+- imgPick1:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 1, Img)
+      Tooltip: =LookUp(Bottles, Id = 1, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(1 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(1 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 1}),
+            locS2 = 0, UpdateContext({locS2: 1}),
+            locS3 = 0, UpdateContext({locS3: 1}),
+            locS4 = 0, UpdateContext({locS4: 1})
+        )
+      X: =66
+      Y: =484
+      Width: =100
+      Height: =134
+- imgPick2:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 2, Img)
+      Tooltip: =LookUp(Bottles, Id = 2, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(2 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(2 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 2}),
+            locS2 = 0, UpdateContext({locS2: 2}),
+            locS3 = 0, UpdateContext({locS3: 2}),
+            locS4 = 0, UpdateContext({locS4: 2})
+        )
+      X: =198
+      Y: =484
+      Width: =100
+      Height: =134
+- imgPick3:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 3, Img)
+      Tooltip: =LookUp(Bottles, Id = 3, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(3 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(3 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 3}),
+            locS2 = 0, UpdateContext({locS2: 3}),
+            locS3 = 0, UpdateContext({locS3: 3}),
+            locS4 = 0, UpdateContext({locS4: 3})
+        )
+      X: =330
+      Y: =484
+      Width: =100
+      Height: =134
+- imgPick4:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 4, Img)
+      Tooltip: =LookUp(Bottles, Id = 4, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(4 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(4 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 4}),
+            locS2 = 0, UpdateContext({locS2: 4}),
+            locS3 = 0, UpdateContext({locS3: 4}),
+            locS4 = 0, UpdateContext({locS4: 4})
+        )
+      X: =462
+      Y: =484
+      Width: =100
+      Height: =134
+- imgPick5:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 5, Img)
+      Tooltip: =LookUp(Bottles, Id = 5, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(5 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(5 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 5}),
+            locS2 = 0, UpdateContext({locS2: 5}),
+            locS3 = 0, UpdateContext({locS3: 5}),
+            locS4 = 0, UpdateContext({locS4: 5})
+        )
+      X: =594
+      Y: =484
+      Width: =100
+      Height: =134
+- imgPick6:
+    Control: Image
+    Properties:
+      Image: =LookUp(BottleImg, Id = 6, Img)
+      Tooltip: =LookUp(Bottles, Id = 6, Name)
+      ImagePosition: =ImagePosition.Fit
+      Transparency: =If(6 in [locS1, locS2, locS3, locS4], 0.8, 0)
+      DisplayMode: =If(6 in [locS1, locS2, locS3, locS4], DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =If(
+            locS1 = 0, UpdateContext({locS1: 6}),
+            locS2 = 0, UpdateContext({locS2: 6}),
+            locS3 = 0, UpdateContext({locS3: 6}),
+            locS4 = 0, UpdateContext({locS4: 6})
+        )
+      X: =726
+      Y: =484
+      Width: =100
+      Height: =134
+# ---------------- actions ----------------
+- btnClear:
+    Control: Classic/Button
+    Properties:
+      Text: ="CLEAR"
+      OnSelect: |-
+        =UpdateContext({locS1: 0, locS2: 0, locS3: 0, locS4: 0})
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =56
+      Y: =646
+      Width: =240
+      Height: =72
+- lblConfirmShadow:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Blue
+      X: =328
+      Y: =654
+      Width: =512
+      Height: =72
+- btnConfirm:
+    Control: Classic/Button
+    Properties:
+      Text: ="CONFIRM ▶"
+      DisplayMode: |-
+        =If(
+            locS1 = 0 || locS2 = 0 || locS3 = 0 || locS4 = 0 || (gMode = "ONLINE" && gSeat <> gMySeat),
+            DisplayMode.Disabled,
+            DisplayMode.Edit
+        )
+      OnSelect: |-
+        =With(
+            {
+                p: If(locS1 = gC1, 1, 0) + If(locS2 = gC2, 1, 0) + If(locS3 = gC3, 1, 0) + If(locS4 = gC4, 1, 0),
+                hits: CountIf([locS1, locS2, locS3, locS4], Value = gC1 || Value = gC2 || Value = gC3 || Value = gC4)
+            },
+            If(
+                gMode = "ONLINE",
+                    Set(
+                        gGame,
+                        Patch(
+                            BottleGames,
+                            LookUp(BottleGames, ID = gGame.ID),
+                            {
+                                Guesses: gGame.Guesses & gTurn & "|" & gSeat & "|" & locS1 & "|" & locS2 & "|" &
+                                    locS3 & "|" & locS4 & "|" & p & "|" & (hits - p) & ";",
+                                Turn: If(p = 4 || gTurn >= MaxTurns, gTurn, gTurn + 1),
+                                Seat: If(p = 4 || gTurn >= MaxTurns, gSeat, If(gSeat = 1, 2, 1)),
+                                Status: If(p = 4, "WON", gTurn >= MaxTurns, "LOST", "PLAYING")
+                            }
+                        )
+                    );
+                    UpdateContext({locS1: 0, locS2: 0, locS3: 0, locS4: 0});
+                    Select(btnApplySync),
+                Collect(
+                    colHistory,
+                    {
+                        Turn: gTurn,
+                        Seat: gSeat,
+                        Player: If(gSeat = 1, gP1.Name, gP2.Name),
+                        S1: locS1, S2: locS2, S3: locS3, S4: locS4,
+                        Perfect: p,
+                        Misplaced: hits - p
+                    }
+                );
+                UpdateContext({locS1: 0, locS2: 0, locS3: 0, locS4: 0});
+                If(
+                    p = 4,
+                        Set(gWin, true); Navigate(scrResult, ScreenTransition.Cover),
+                    gTurn >= MaxTurns,
+                        Set(gWin, false); Navigate(scrResult, ScreenTransition.Cover),
+                    Set(gTurn, gTurn + 1);
+                    If(gMode = "DUO", Set(gSeat, If(gSeat = 1, 2, 1)); UpdateContext({locHandoff: true}))
+                )
+            )
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =24
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =320
+      Y: =646
+      Width: =512
+      Height: =72
+# ---------------- clues + guess log ----------------
+- lblClueHead:
+    Control: Label
+    Properties:
+      Text: ="CLUES"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_White
+      Fill: =C_Blue
+      PaddingLeft: =14
+      X: =872
+      Y: =44
+      Width: =438
+      Height: =40
+- lblClue:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            CountRows(colHistory) = 0,
+            "MAKE YOUR FIRST GUESS!",
+            With(
+                {l: Last(colHistory)},
+                "LAST GUESS #" & Text(l.Turn, "00") & Char(10) &
+                "● PERFECT     : " & l.Perfect & Char(10) &
+                "○ COLOUR ONLY : " & l.Misplaced
+            )
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =17
+      Color: =C_White
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Blue
+      PaddingLeft: =16
+      X: =872
+      Y: =84
+      Width: =438
+      Height: =130
+- lblLogHead:
+    Control: Label
+    Properties:
+      Text: ="GUESS LOG"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_White
+      Fill: =C_Blue
+      PaddingLeft: =14
+      X: =872
+      Y: =230
+      Width: =438
+      Height: =40
+- htmlLog:
+    Control: HtmlViewer
+    Properties:
+      HtmlText: |-
+        ="<div style='font-family:Courier New,monospace;font-weight:bold;color:#FFFFFF;font-size:15px'>" &
+        If(
+            CountRows(colHistory) = 0,
+            "<div style='color:#7A95FF;padding:10px'>NO GUESSES YET...</div>",
+            Concat(
+                Sort(colHistory, Turn, SortOrder.Descending),
+                "<table style='border-collapse:separate;border-spacing:5px;margin-bottom:6px;border:3px solid #1E4DFF;background:#0B1440;width:100%'><tr>" &
+                "<td style='width:46px;color:#7A95FF'>#" & Text(Turn, "00") & "</td>" &
+                Concat(
+                    [S1, S2, S3, S4],
+                    "<td style='width:20px;height:30px;background:" & LookUp(Bottles, Id = Value).Hex & ";border:3px solid #050505'></td>"
+                ) &
+                "<td style='padding-left:10px'>●" & Perfect & " ○" & Misplaced & "</td>" &
+                If(gMode <> "SOLO", "<td style='color:#7A95FF;font-size:12px;text-align:right'>P" & Seat & "</td>", "") &
+                "</tr></table>"
+            )
+        ) & "</div>"
+      Fill: =C_Black
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Blue
+      PaddingTop: =6
+      PaddingLeft: =6
+      PaddingRight: =6
+      X: =872
+      Y: =270
+      Width: =438
+      Height: =360
+- btnQuit:
+    Control: Classic/Button
+    Properties:
+      Text: ="QUIT TO MENU"
+      OnSelect: |-
+        =If(
+            gMode = "ONLINE" && gGame.Status = "PLAYING",
+            Patch(BottleGames, LookUp(BottleGames, ID = gGame.ID), {Status: "QUIT"})
+        );
+        Navigate(scrHome, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =872
+      Y: =646
+      Width: =438
+      Height: =72
+# ---------------- ONLINE: sync with the shared BottleGames list ----------------
+- lblWaitBlock:
+    Control: Label
+    Properties:
+      Text: |-
+        ="WAITING FOR " & Upper(If(gSeat = 1, gP1.Name, gP2.Name)) & Char(10) & Char(10) &
+        "NO TALKING · NO CHAT · NO HINTS" & Char(10) &
+        "WATCH THE CLUES ON THE RIGHT"
+      Visible: =gMode = "ONLINE" && gSeat <> gMySeat
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Color: =C_Gold
+      Fill: =RGBA(5, 5, 5, 0.88)
+      Align: =Align.Center
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Gold
+      X: =56
+      Y: =176
+      Width: =784
+      Height: =542
+- btnApplySync:
+    Control: Classic/Button
+    Properties:
+      Text: ="sync"
+      Visible: =false
+      OnSelect: |-
+        =ClearCollect(
+            colHistory,
+            ForAll(
+                Filter(Split(gGame.Guesses, ";"), !IsBlank(Value)) As g,
+                With(
+                    {f: Split(g.Value, "|")},
+                    {
+                        Turn: Value(Index(f, 1).Value),
+                        Seat: Value(Index(f, 2).Value),
+                        Player: If(Value(Index(f, 2).Value) = 1, gP1.Name, gP2.Name),
+                        S1: Value(Index(f, 3).Value),
+                        S2: Value(Index(f, 4).Value),
+                        S3: Value(Index(f, 5).Value),
+                        S4: Value(Index(f, 6).Value),
+                        Perfect: Value(Index(f, 7).Value),
+                        Misplaced: Value(Index(f, 8).Value)
+                    }
+                )
+            )
+        );
+        Set(gTurn, gGame.Turn);
+        Set(gSeat, gGame.Seat);
+        If(
+            gGame.Status = "WON",
+                Set(gWin, true); Navigate(scrResult, ScreenTransition.Cover),
+            gGame.Status = "LOST",
+                Set(gWin, false); Navigate(scrResult, ScreenTransition.Cover),
+            gGame.Status = "QUIT",
+                Notify("YOUR TEAMMATE LEFT THE GAME", NotificationType.Warning);
+                Navigate(scrHome, ScreenTransition.Fade)
+        )
+      X: =0
+      Y: =0
+      Width: =10
+      Height: =10
+- tmrSync:
+    Control: Timer
+    Properties:
+      Duration: =2000
+      Repeat: =true
+      AutoStart: =gMode = "ONLINE"
+      Visible: =false
+      OnTimerEnd: |-
+        =If(
+            gMode = "ONLINE",
+            Refresh(BottleGames);
+            Set(gGame, LookUp(BottleGames, ID = gGame.ID));
+            Select(btnApplySync)
+        )
+      X: =1200
+      Y: =700
+      Width: =40
+      Height: =20
+# ---------------- DUO hand-off overlay (keeps players from talking) ----------------
+- lblHandoffBg:
+    Control: Label
+    Properties:
+      Text: =""
+      Visible: =locHandoff
+      Fill: =RGBA(5, 5, 5, 0.96)
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblHandoffBox:
+    Control: Label
+    Properties:
+      Text: =""
+      Visible: =locHandoff
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =8
+      BorderColor: =C_Blue
+      X: =283
+      Y: =144
+      Width: =800
+      Height: =480
+- lblHandoffTitle:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(CountRows(colHistory) = 0, "PLAYER 1 STARTS", "PASS THE DEVICE")
+      Visible: =locHandoff
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =32
+      Color: =C_White
+      Align: =Align.Center
+      X: =283
+      Y: =174
+      Width: =800
+      Height: =60
+- lblHandoffName:
+    Control: Label
+    Properties:
+      Text: |-
+        ="P" & gSeat & ": " & Upper(If(gSeat = 1, gP1.Name, gP2.Name))
+      Visible: =locHandoff
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =26
+      Color: =C_Black
+      Fill: =C_White
+      Align: =Align.Center
+      X: =343
+      Y: =250
+      Width: =680
+      Height: =70
+- lblHandoffRule:
+    Control: Label
+    Properties:
+      Text: |-
+        ="NO TALKING · NO POINTING · NO HINTS
+        USE ONLY THE CLUES ON SCREEN"
+      Visible: =locHandoff
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_Gold
+      Align: =Align.Center
+      X: =283
+      Y: =340
+      Width: =800
+      Height: =80
+- lblHandoffLast:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            CountRows(colHistory) = 0,
+            "TURN 01 OF " & MaxTurns,
+            "TEAMMATE'S GUESS → ● " & Last(colHistory).Perfect & "  ○ " & Last(colHistory).Misplaced
+        )
+      Visible: =locHandoff
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =15
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =283
+      Y: =430
+      Width: =800
+      Height: =50
+- btnReady:
+    Control: Classic/Button
+    Properties:
+      Text: ="I'M READY ▶"
+      Visible: =locHandoff
+      OnSelect: |-
+        =UpdateContext({locHandoff: false})
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =24
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =483
+      Y: =510
+      Width: =400
+      Height: =76

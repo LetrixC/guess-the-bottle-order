@@ -1,0 +1,13 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 200 200'>
+<circle cx='100' cy='100' r='95' fill='#FFFFFF' stroke='#1F4E86' stroke-width='7'/>
+<text x='100' y='98' text-anchor='middle' textLength='168' lengthAdjust='spacingAndGlyphs' font-family='Georgia,Times New Roman,serif' font-size='21' fill='#111111'>9 D<tspan font-size='16'>OTS</tspan> C<tspan font-size='16'>ONSULTING</tspan></text>
+<ellipse cx='24.5' cy='123' rx='4' ry='2.88' fill='#D5DEEA'/>
+<ellipse cx='37' cy='123' rx='4.5' ry='3.24' fill='#C3D0E2'/>
+<ellipse cx='50.5' cy='123' rx='5' ry='3.6' fill='#ADC0D9'/>
+<ellipse cx='65' cy='123' rx='5.5' ry='3.96' fill='#93ACCD'/>
+<ellipse cx='81' cy='123' rx='6.5' ry='4.68' fill='#7896BE'/>
+<ellipse cx='99' cy='123' rx='7.5' ry='5.4' fill='#5E80B0'/>
+<ellipse cx='119' cy='123' rx='8.5' ry='6.12' fill='#4569A0'/>
+<ellipse cx='141.5' cy='123' rx='10' ry='7.2' fill='#2D5491'/>
+<ellipse cx='167.5' cy='123' rx='12' ry='8.64' fill='#0F4C8A'/>
+</svg>

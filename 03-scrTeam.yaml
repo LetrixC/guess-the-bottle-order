@@ -1,0 +1,392 @@
+- imgBgTeam:
+    Control: Image
+    Properties:
+      Image: =BgPattern
+      ImagePosition: =ImagePosition.Fill
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblFrameTeam:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =RGBA(0, 0, 0, 0)
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =24
+      Y: =24
+      Width: =1318
+      Height: =720
+- imgLogoTeam:
+    Control: Image
+    Properties:
+      Image: =NineDotsLogo
+      X: =72
+      Y: =64
+      Width: =48
+      Height: =48
+- lblTeamTitleShadow:
+    Control: Label
+    Properties:
+      Text: ="2P  TEAM UP"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =40
+      Color: =C_Blue
+      X: =142
+      Y: =60
+      Width: =800
+      Height: =70
+- lblTeamTitle:
+    Control: Label
+    Properties:
+      Text: ="2P  TEAM UP"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =40
+      Color: =C_White
+      X: =136
+      Y: =54
+      Width: =800
+      Height: =70
+- lblP1Card:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =72
+      Y: =160
+      Width: =580
+      Height: =200
+- lblP1Tag:
+    Control: Label
+    Properties:
+      Text: ="PLAYER 1 · YOU"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =14
+      Color: =C_BlueLt
+      X: =96
+      Y: =180
+      Width: =530
+      Height: =36
+- lblP1Name:
+    Control: Label
+    Properties:
+      Text: =Upper(User().FullName)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =24
+      Color: =C_White
+      X: =96
+      Y: =230
+      Width: =530
+      Height: =60
+- lblP1Sub:
+    Control: Label
+    Properties:
+      Text: ="SIGNED IN WITH YOUR TEAMS ACCOUNT"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =11
+      Color: =C_BlueLt
+      X: =96
+      Y: =300
+      Width: =530
+      Height: =36
+- lblP2Card:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =714
+      Y: =160
+      Width: =580
+      Height: =200
+- lblP2Tag:
+    Control: Label
+    Properties:
+      Text: ="PLAYER 2 · PICK YOUR TEAMMATE"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =14
+      Color: =C_BlueLt
+      X: =738
+      Y: =180
+      Width: =530
+      Height: =36
+- cmbMate:
+    Control: Classic/ComboBox
+    Properties:
+      Items: |-
+        =Office365Users.SearchUser({searchTerm: Self.SearchText, top: 15})
+      DisplayFields: =["DisplayName"]
+      SearchFields: =["DisplayName"]
+      SelectMultiple: =false
+      IsSearchable: =true
+      InputTextPlaceholder: ="SEARCH A COLLEAGUE..."
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Fill: =C_White
+      Color: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      ChevronFill: =C_Blue
+      SelectionFill: =C_Blue
+      X: =738
+      Y: =232
+      Width: =530
+      Height: =60
+- lblP2Sub:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            !IsBlank(cmbMate.Selected) && cmbMate.Selected.Mail = User().Email,
+            "YOU CAN'T TEAM UP WITH YOURSELF :)",
+            "TEAMMATE IS SHOWN BY TEAMS ACCOUNT NAME"
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =11
+      Color: =C_BlueLt
+      X: =738
+      Y: =300
+      Width: =530
+      Height: =36
+- lblTeamNameTag:
+    Control: Label
+    Properties:
+      Text: ="TEAM NAME (OPTIONAL)"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =14
+      Color: =C_BlueLt
+      X: =72
+      Y: =392
+      Width: =580
+      Height: =36
+- txtTeamName:
+    Control: Classic/TextInput
+    Properties:
+      Default: =""
+      HintText: ="E.G. BOTTLE BANDITS"
+      MaxLength: =24
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_White
+      Color: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =72
+      Y: =432
+      Width: =580
+      Height: =64
+- lblDuoRules:
+    Control: Label
+    Properties:
+      Text: |-
+        ="DUO RULES
+        ▶ TAKE TURNS - ONE GUESS EACH
+        ▶ NO TALKING. NO POINTING. NO HINTS.
+        ▶ LEARN ONLY FROM YOUR TEAMMATE'S CLUES
+        ▶ ONE SHARED SCORE: TOTAL TEAM TURNS
+        ▶ ONLINE ROOM = EACH ON YOUR OWN COMPUTER"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =13
+      Color: =C_White
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Gold
+      VerticalAlign: =VerticalAlign.Top
+      PaddingLeft: =16
+      PaddingTop: =12
+      X: =714
+      Y: =392
+      Width: =580
+      Height: =180
+- btnBackTeam:
+    Control: Classic/Button
+    Properties:
+      Text: ="◀ BACK"
+      OnSelect: =Navigate(scrHome, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =72
+      Y: =630
+      Width: =180
+      Height: =76
+- btnJoinRoom:
+    Control: Classic/Button
+    Properties:
+      Text: ="JOIN A ROOM"
+      OnSelect: |-
+        =Set(gMode, "ONLINE");
+        Set(gMySeat, 2);
+        Navigate(scrLobby, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_Gold
+      HoverFill: =C_Navy
+      HoverColor: =C_Gold
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Gold
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =268
+      Y: =630
+      Width: =300
+      Height: =76
+- btnStartDuo:
+    Control: Classic/Button
+    Properties:
+      Text: ="SAME DEVICE ▶"
+      DisplayMode: |-
+        =If(
+            IsBlank(cmbMate.Selected) || cmbMate.Selected.Mail = User().Email,
+            DisplayMode.Disabled,
+            DisplayMode.Edit
+        )
+      OnSelect: |-
+        =Set(gMode, "DUO");
+        Set(gP2, {Name: cmbMate.Selected.DisplayName, Email: cmbMate.Selected.Mail});
+        Set(
+            gTeam,
+            If(
+                IsBlank(Trim(txtTeamName.Text)),
+                First(Split(gP1.Name, " ")).Value & " + " & First(Split(gP2.Name, " ")).Value,
+                Trim(txtTeamName.Text)
+            )
+        );
+        Navigate(scrGame, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =584
+      Y: =630
+      Width: =340
+      Height: =76
+- lblOnlineShadow:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Blue
+      X: =954
+      Y: =638
+      Width: =340
+      Height: =76
+- btnOnline:
+    Control: Classic/Button
+    Properties:
+      Text: ="ONLINE ROOM ▶"
+      DisplayMode: |-
+        =If(
+            IsBlank(cmbMate.Selected) || cmbMate.Selected.Mail = User().Email,
+            DisplayMode.Disabled,
+            DisplayMode.Edit
+        )
+      OnSelect: |-
+        =Set(gMode, "ONLINE");
+        Set(gMySeat, 1);
+        Set(gP2, {Name: cmbMate.Selected.DisplayName, Email: cmbMate.Selected.Mail});
+        Set(
+            gTeam,
+            If(
+                IsBlank(Trim(txtTeamName.Text)),
+                First(Split(gP1.Name, " ")).Value & " + " & First(Split(gP2.Name, " ")).Value,
+                Trim(txtTeamName.Text)
+            )
+        );
+        Set(
+            gGame,
+            Patch(
+                BottleGames,
+                Defaults(BottleGames),
+                {
+                    RoomCode: Concat(Sequence(4), Mid("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", RandBetween(1, 32), 1)),
+                    HostName: gP1.Name,
+                    HostEmail: gP1.Email,
+                    GuestName: gP2.Name,
+                    GuestEmail: gP2.Email,
+                    TeamName: gTeam,
+                    Secret: Concat(FirstN(Shuffle(Bottles), 4), Text(Id), ","),
+                    Status: "WAITING",
+                    Turn: 1,
+                    Seat: 1,
+                    Guesses: ""
+                }
+            )
+        );
+        Navigate(scrLobby, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =946
+      Y: =630
+      Width: =340
+      Height: =76

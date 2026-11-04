@@ -1,0 +1,354 @@
+- imgBgRes:
+    Control: Image
+    Properties:
+      Image: =BgPattern
+      ImagePosition: =ImagePosition.Fill
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblFrameRes:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =RGBA(0, 0, 0, 0)
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =24
+      Y: =24
+      Width: =1318
+      Height: =720
+- imgLogoRes:
+    Control: Image
+    Properties:
+      Image: =NineDotsLogo
+      X: =56
+      Y: =44
+      Width: =40
+      Height: =40
+- lblBrandRes:
+    Control: Label
+    Properties:
+      Text: ="RESULTS"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =15
+      Color: =C_BlueLt
+      X: =108
+      Y: =44
+      Width: =720
+      Height: =40
+- lblResTitle:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(gWin, "★ CODE CRACKED! ★", "GAME OVER - THE BOTTLES WIN")
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =30
+      Color: =If(gWin, C_Gold, C_White)
+      X: =56
+      Y: =96
+      Width: =780
+      Height: =60
+# ---------------- shareable result card (shows Teams account names) ----------------
+- imgCard:
+    Control: Image
+    Properties:
+      ImagePosition: =ImagePosition.Fit
+      Image: |-
+        =With(
+            {
+                n1: Substitute(Substitute(Substitute(Left(gP1.Name, 26), "&", "&amp;"), "<", "&lt;"), ">", "&gt;"),
+                n2: Substitute(Substitute(Substitute(Left(gP2.Name, 26), "&", "&amp;"), "<", "&lt;"), ">", "&gt;"),
+                tm: Substitute(Substitute(Substitute(Upper(Left(gTeam, 26)), "&", "&amp;"), "<", "&lt;"), ">", "&gt;"),
+                t: CountRows(colHistory),
+                g1: CountRows(Filter(colHistory, Seat = 1)),
+                g2: CountRows(Filter(colHistory, Seat = 2)),
+                f: "font-family='Courier New,monospace' font-weight='bold'"
+            },
+            SvgHead & EncodeUrl(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='720' height='450' viewBox='0 0 720 450'>" &
+                "<rect width='720' height='450' fill='#050505'/>" &
+                "<rect x='12' y='12' width='696' height='426' fill='#0B1440' stroke='#1E4DFF' stroke-width='8'/>" &
+                "<g transform='translate(28,22) scale(0.34)'>" & NineDotsRects & "</g>" &
+                "<text x='110' y='62' " & f & " font-size='18' fill='#7A95FF'>GUESS THE BOTTLE ORDER</text>" &
+                "<text x='36' y='132' " & f & " font-size='46' fill='" & If(gWin, "#FFD60A", "#FFFFFF") & "'>" &
+                    If(gWin, "CODE CRACKED!", "GAME OVER") & "</text>" &
+                "<text x='36' y='176' " & f & " font-size='24' fill='#FFFFFF'>" &
+                    If(gWin, "IN " & t & " TURN" & If(t = 1, "", "S") & " / " & MaxTurns, "USED ALL " & MaxTurns & " TURNS") & "</text>" &
+                If(
+                    gMode <> "SOLO",
+                    "<text x='36' y='236' " & f & " font-size='16' fill='#7A95FF'>TEAM</text>" &
+                    "<text x='36' y='264' " & f & " font-size='24' fill='#FFFFFF'>" & tm & "</text>" &
+                    "<text x='36' y='310' " & f & " font-size='17' fill='#FFFFFF'>P1 " & n1 & "</text>" &
+                    "<text x='36' y='332' " & f & " font-size='14' fill='#7A95FF'>   " & g1 & " GUESS" & If(g1 = 1, "", "ES") & "</text>" &
+                    "<text x='36' y='364' " & f & " font-size='17' fill='#FFFFFF'>P2 " & n2 & "</text>" &
+                    "<text x='36' y='386' " & f & " font-size='14' fill='#7A95FF'>   " & g2 & " GUESS" & If(g2 = 1, "", "ES") & "</text>",
+                    "<text x='36' y='236' " & f & " font-size='16' fill='#7A95FF'>PLAYER</text>" &
+                    "<text x='36' y='266' " & f & " font-size='24' fill='#FFFFFF'>" & n1 & "</text>"
+                ) &
+                "<text x='450' y='222' " & f & " font-size='16' fill='#7A95FF'>SECRET CODE</text>" &
+                Concat(
+                    Table({p: 1, c: gC1}, {p: 2, c: gC2}, {p: 3, c: gC3}, {p: 4, c: gC4}),
+                    "<g transform='translate(" & (450 + (p - 1) * 60) & ",236) scale(4)' shape-rendering='crispEdges'>" &
+                    Substitute(BottleRects, "#FILL", LookUp(Bottles, Id = c).Hex) & "</g>"
+                ) &
+                "<text x='36' y='418' " & f & " font-size='14' fill='#7A95FF'>" & Text(Now(), "yyyy-mm-dd") &
+                    " · CAN YOU BEAT " & If(gMode <> "SOLO", "US", "ME") & "?</text>" &
+                "</svg>"
+            )
+        )
+      X: =56
+      Y: =166
+      Width: =780
+      Height: =488
+- btnPlayAgain:
+    Control: Classic/Button
+    Properties:
+      Text: ="▶ PLAY AGAIN"
+      OnSelect: =If(gMode = "ONLINE", Navigate(scrTeam, ScreenTransition.Fade), Navigate(scrGame, ScreenTransition.Fade))
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =56
+      Y: =666
+      Width: =380
+      Height: =60
+- btnMenuRes:
+    Control: Classic/Button
+    Properties:
+      Text: ="MENU"
+      OnSelect: =Navigate(scrHome, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =456
+      Y: =666
+      Width: =380
+      Height: =60
+# ---------------- sharing ----------------
+- lblShareMsg:
+    Control: Label
+    Properties:
+      Visible: =false
+      Text: |-
+        ="GUESS THE BOTTLE ORDER · 9 DOTS CONSULTING" & Char(10) &
+        If(gMode <> "SOLO", "Team " & gTeam & " (" & gP1.Name & " + " & gP2.Name & ")", gP1.Name) &
+        If(
+            gWin,
+            " cracked the secret bottle order in " & CountRows(colHistory) & " turn(s)!",
+            " couldn't crack the code in " & MaxTurns & " turns... the bottles win this round."
+        ) &
+        Char(10) & "Think you can beat that? Play here: " & AppPlayLink
+      X: =872
+      Y: =700
+      Width: =10
+      Height: =10
+- lblShareHead:
+    Control: Label
+    Properties:
+      Text: ="SHARE WITH FRIENDS"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_White
+      Fill: =C_Blue
+      PaddingLeft: =14
+      X: =872
+      Y: =96
+      Width: =438
+      Height: =44
+- btnShareTeams:
+    Control: Classic/Button
+    Properties:
+      Text: ="SHARE TO TEAMS"
+      OnSelect: |-
+        =Launch(
+            "https://teams.microsoft.com/share?href=" & EncodeUrl(AppPlayLink) &
+            "&msgText=" & EncodeUrl(lblShareMsg.Text)
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =872
+      Y: =156
+      Width: =438
+      Height: =64
+- lblChallengeTag:
+    Control: Label
+    Properties:
+      Text: ="CHALLENGE A COLLEAGUE"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =13
+      Color: =C_BlueLt
+      X: =872
+      Y: =234
+      Width: =438
+      Height: =32
+- cmbFriend:
+    Control: Classic/ComboBox
+    Properties:
+      Items: |-
+        =Office365Users.SearchUser({searchTerm: Self.SearchText, top: 15})
+      DisplayFields: =["DisplayName"]
+      SearchFields: =["DisplayName"]
+      SelectMultiple: =false
+      IsSearchable: =true
+      InputTextPlaceholder: ="SEARCH A NAME..."
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =15
+      Fill: =C_White
+      Color: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      ChevronFill: =C_Blue
+      SelectionFill: =C_Blue
+      X: =872
+      Y: =268
+      Width: =438
+      Height: =56
+- btnChallenge:
+    Control: Classic/Button
+    Properties:
+      Text: ="SEND IN TEAMS CHAT"
+      DisplayMode: =If(IsBlank(cmbFriend.Selected), DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =Launch(
+            "https://teams.microsoft.com/l/chat/0/0?users=" & cmbFriend.Selected.Mail &
+            "&message=" & EncodeUrl(lblShareMsg.Text)
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =872
+      Y: =334
+      Width: =438
+      Height: =64
+- btnEmail:
+    Control: Classic/Button
+    Properties:
+      Text: ="SHARE BY EMAIL"
+      OnSelect: |-
+        =Launch(
+            "mailto:?subject=" & EncodeUrl("Guess the Bottle Order - can you beat this?") &
+            "&body=" & EncodeUrl(lblShareMsg.Text)
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =872
+      Y: =414
+      Width: =438
+      Height: =64
+- btnCopy:
+    Control: Classic/Button
+    Properties:
+      Text: ="COPY RESULT TEXT"
+      OnSelect: |-
+        =Copy(lblShareMsg.Text);
+        Notify("RESULT COPIED!", NotificationType.Success)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =872
+      Y: =494
+      Width: =438
+      Height: =64
+- lblTip:
+    Control: Label
+    Properties:
+      Text: |-
+        ="TIP: SCREENSHOT THE CARD (WIN+SHIFT+S) AND PASTE IT INTO THE TEAMS CHAT TO SHARE THE PIC WITH YOUR NAMES."
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_Gold
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Gold
+      PaddingLeft: =14
+      PaddingRight: =14
+      X: =872
+      Y: =576
+      Width: =438
+      Height: =150

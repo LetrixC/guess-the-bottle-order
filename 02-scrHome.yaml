@@ -1,0 +1,233 @@
+- imgBgHome:
+    Control: Image
+    Properties:
+      Image: =BgPattern
+      ImagePosition: =ImagePosition.Fill
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblFrameHome:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =RGBA(0, 0, 0, 0)
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =24
+      Y: =24
+      Width: =1318
+      Height: =720
+- imgLogoHome:
+    Control: Image
+    Properties:
+      Image: =NineDotsLogo
+      X: =64
+      Y: =44
+      Width: =100
+      Height: =100
+- lblTitleShadowHome:
+    Control: Label
+    Properties:
+      Text: |-
+        ="GUESS THE
+        BOTTLE ORDER"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =54
+      Color: =C_Blue
+      X: =78
+      Y: =156
+      Width: =780
+      Height: =200
+- lblTitleHome:
+    Control: Label
+    Properties:
+      Text: |-
+        ="GUESS THE
+        BOTTLE ORDER"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =54
+      Color: =C_White
+      X: =72
+      Y: =150
+      Width: =780
+      Height: =200
+- lblTagHome:
+    Control: Label
+    Properties:
+      Text: ="CRACK THE SECRET ORDER OF 4 BOTTLES IN 10 TURNS OR LESS"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =14
+      Color: =C_BlueLt
+      X: =72
+      Y: =362
+      Width: =780
+      Height: =40
+- lblHelloHome:
+    Control: Label
+    Properties:
+      Text: |-
+        ="INSERT COIN...  HI, " & Upper(User().FullName)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_Gold
+      X: =72
+      Y: =420
+      Width: =780
+      Height: =40
+- lblSoloShadow:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Blue
+      X: =80
+      Y: =498
+      Width: =360
+      Height: =90
+- btnSolo:
+    Control: Classic/Button
+    Properties:
+      Text: ="1P  SOLO"
+      OnSelect: |-
+        =Set(gMode, "SOLO");
+        Set(gP1, {Name: User().FullName, Email: User().Email});
+        Set(gP2, {Name: "", Email: ""});
+        Set(gTeam, User().FullName);
+        Navigate(scrGame, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =26
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =72
+      Y: =490
+      Width: =360
+      Height: =90
+- lblDuoShadow:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =C_Blue
+      X: =480
+      Y: =498
+      Width: =360
+      Height: =90
+- btnDuo:
+    Control: Classic/Button
+    Properties:
+      Text: ="2P  DUO TEAM"
+      OnSelect: |-
+        =Set(gMode, "DUO");
+        Set(gP1, {Name: User().FullName, Email: User().Email});
+        Navigate(scrTeam, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =26
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =472
+      Y: =490
+      Width: =360
+      Height: =90
+- lblSoloDesc:
+    Control: Label
+    Properties:
+      Text: ="PLAY YOURSELF. EVERY GUESS COUNTS AS A TURN."
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      X: =72
+      Y: =600
+      Width: =360
+      Height: =60
+- lblDuoDesc:
+    Control: Label
+    Properties:
+      Text: ="TEAM UP WITH A COLLEAGUE. TAKE TURNS. NO TALKING!"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      X: =472
+      Y: =600
+      Width: =360
+      Height: =60
+- imgParadeHome:
+    Control: Image
+    Properties:
+      Image: =BottleParade
+      ImagePosition: =ImagePosition.Fit
+      X: =900
+      Y: =100
+      Width: =400
+      Height: =110
+- lblHowHead:
+    Control: Label
+    Properties:
+      Text: ="HOW TO PLAY"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Color: =C_White
+      Fill: =C_Blue
+      PaddingLeft: =16
+      X: =900
+      Y: =250
+      Width: =400
+      Height: =44
+- lblHow:
+    Control: Label
+    Properties:
+      Text: |-
+        ="1. THE SYSTEM HIDES 4 BOTTLES
+           (6 COLOURS, NO REPEATS)
+        2. ARRANGE YOUR 4 BOTTLES
+        3. PRESS CONFIRM
+        4. READ THE CLUES:
+           ● PERFECT = RIGHT COLOUR,
+                       RIGHT SPOT
+           ○ COLOUR  = RIGHT COLOUR,
+                       WRONG SPOT
+        5. DEDUCE, SWAP, REPEAT
+        6. HIT ●●●● IN 10 TURNS TO WIN"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =13
+      Color: =C_White
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Blue
+      VerticalAlign: =VerticalAlign.Top
+      PaddingLeft: =16
+      PaddingTop: =14
+      X: =900
+      Y: =294
+      Width: =400
+      Height: =380

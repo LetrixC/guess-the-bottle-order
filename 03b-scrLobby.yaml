@@ -1,0 +1,426 @@
+- imgBgLobby:
+    Control: Image
+    Properties:
+      Image: =BgPattern
+      ImagePosition: =ImagePosition.Fill
+      X: =0
+      Y: =0
+      Width: =1366
+      Height: =768
+- lblFrameLobby:
+    Control: Label
+    Properties:
+      Text: =""
+      Fill: =RGBA(0, 0, 0, 0)
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =24
+      Y: =24
+      Width: =1318
+      Height: =720
+- imgLogoLobby:
+    Control: Image
+    Properties:
+      Image: =NineDotsLogo
+      X: =72
+      Y: =64
+      Width: =48
+      Height: =48
+- lblLobbyTitleShadow:
+    Control: Label
+    Properties:
+      Text: =If(gMySeat = 1, "ONLINE ROOM", "JOIN A ROOM")
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =40
+      Color: =C_Blue
+      X: =142
+      Y: =60
+      Width: =800
+      Height: =70
+- lblLobbyTitle:
+    Control: Label
+    Properties:
+      Text: =If(gMySeat = 1, "ONLINE ROOM", "JOIN A ROOM")
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =40
+      Color: =C_White
+      X: =136
+      Y: =54
+      Width: =800
+      Height: =70
+# ---------------- host: waiting for teammate ----------------
+- lblHostCard:
+    Control: Label
+    Properties:
+      Text: =""
+      Visible: =gMySeat = 1
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Blue
+      X: =72
+      Y: =160
+      Width: =700
+      Height: =440
+- lblHostTag:
+    Control: Label
+    Properties:
+      Text: ="YOUR ROOM CODE"
+      Visible: =gMySeat = 1
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =72
+      Y: =186
+      Width: =700
+      Height: =36
+- lblRoomCode:
+    Control: Label
+    Properties:
+      Text: =gGame.RoomCode
+      Visible: =gMySeat = 1
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =80
+      Color: =C_Gold
+      Align: =Align.Center
+      X: =72
+      Y: =226
+      Width: =700
+      Height: =120
+- lblHostStatus:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            gGame.Status = "PLAYING",
+            "TEAMMATE JOINED! STARTING...",
+            "WAITING FOR " & Upper(gGame.GuestName) & " TO JOIN..."
+        )
+      Visible: =gMySeat = 1
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_White
+      Fill: =C_Black
+      Align: =Align.Center
+      X: =112
+      Y: =360
+      Width: =620
+      Height: =56
+- lblHostHelp:
+    Control: Label
+    Properties:
+      Text: |-
+        ="YOUR TEAMMATE OPENS THE GAME ON THEIR COMPUTER:
+        2P DUO TEAM  ▶  JOIN A ROOM
+        THE INVITE APPEARS AUTOMATICALLY (OR THEY TYPE THE CODE)."
+      Visible: =gMySeat = 1
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =12
+      Color: =C_BlueLt
+      Align: =Align.Center
+      X: =92
+      Y: =424
+      Width: =660
+      Height: =80
+- btnInvite:
+    Control: Classic/Button
+    Properties:
+      Text: ="SEND INVITE IN TEAMS CHAT"
+      Visible: =gMySeat = 1
+      OnSelect: |-
+        =Launch(
+            "https://teams.microsoft.com/l/chat/0/0?users=" & gGame.GuestEmail &
+            "&message=" & EncodeUrl(
+                "Join my GUESS THE BOTTLE ORDER game! Open the app > 2P DUO TEAM > JOIN A ROOM. Room code: " &
+                gGame.RoomCode & "  " & AppPlayLink
+            )
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =112
+      Y: =516
+      Width: =620
+      Height: =64
+# ---------------- guest: join ----------------
+- lblJoinCard:
+    Control: Label
+    Properties:
+      Text: =""
+      Visible: =gMySeat = 2
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =6
+      BorderColor: =C_Gold
+      X: =72
+      Y: =160
+      Width: =700
+      Height: =440
+- lblInviteTag:
+    Control: Label
+    Properties:
+      Text: ="INVITES FOR YOU"
+      Visible: =gMySeat = 2
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =C_BlueLt
+      X: =100
+      Y: =180
+      Width: =640
+      Height: =36
+- lblInvite:
+    Control: Label
+    Properties:
+      Text: |-
+        =If(
+            IsBlank(gInvite),
+            "NO INVITES YET... CHECKING EVERY 2 SECONDS",
+            Upper(gInvite.HostName) & " INVITED YOU" & Char(10) &
+            "TEAM " & Upper(gInvite.TeamName) & "  ·  ROOM " & gInvite.RoomCode
+        )
+      Visible: =gMySeat = 2
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =16
+      Color: =If(IsBlank(gInvite), C_BlueLt, C_White)
+      Fill: =C_Black
+      PaddingLeft: =16
+      X: =100
+      Y: =220
+      Width: =640
+      Height: =90
+- btnJoinInvite:
+    Control: Classic/Button
+    Properties:
+      Text: ="JOIN THIS GAME ▶"
+      Visible: =gMySeat = 2
+      DisplayMode: =If(IsBlank(gInvite), DisplayMode.Disabled, DisplayMode.Edit)
+      OnSelect: |-
+        =UpdateContext({locJoin: gInvite});
+        Select(btnDoJoin)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =100
+      Y: =322
+      Width: =640
+      Height: =64
+- lblCodeTag:
+    Control: Label
+    Properties:
+      Text: ="OR ENTER A ROOM CODE"
+      Visible: =gMySeat = 2
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =14
+      Color: =C_BlueLt
+      X: =100
+      Y: =420
+      Width: =640
+      Height: =34
+- txtRoom:
+    Control: Classic/TextInput
+    Properties:
+      Default: =""
+      HintText: ="E.G. K7QX"
+      MaxLength: =4
+      Visible: =gMySeat = 2
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =24
+      Fill: =C_White
+      Color: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =100
+      Y: =460
+      Width: =300
+      Height: =70
+- btnJoinCode:
+    Control: Classic/Button
+    Properties:
+      Text: ="JOIN ▶"
+      Visible: =gMySeat = 2
+      DisplayMode: =If(Len(Trim(txtRoom.Text)) = 4, DisplayMode.Edit, DisplayMode.Disabled)
+      OnSelect: |-
+        =Refresh(BottleGames);
+        UpdateContext({locJoin: LookUp(BottleGames, RoomCode = Upper(Trim(txtRoom.Text)) && Status = "WAITING")});
+        If(
+            IsBlank(locJoin),
+            Notify("ROOM NOT FOUND, OR THE GAME ALREADY STARTED", NotificationType.Error),
+            Select(btnDoJoin)
+        )
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =20
+      Fill: =C_White
+      Color: =C_Black
+      HoverFill: =C_Gold
+      HoverColor: =C_Black
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      DisabledFill: =C_Dim
+      DisabledColor: =C_BlueLt
+      DisabledBorderColor: =C_Black
+      BorderColor: =C_Black
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =420
+      Y: =460
+      Width: =320
+      Height: =70
+- btnDoJoin:
+    Control: Classic/Button
+    Properties:
+      Text: ="join"
+      Visible: =false
+      OnSelect: |-
+        =Set(
+            gGame,
+            Patch(
+                BottleGames,
+                LookUp(BottleGames, ID = locJoin.ID),
+                {Status: "PLAYING", GuestName: User().FullName, GuestEmail: User().Email}
+            )
+        );
+        Set(gP1, {Name: gGame.HostName, Email: gGame.HostEmail});
+        Set(gP2, {Name: gGame.GuestName, Email: gGame.GuestEmail});
+        Set(gTeam, gGame.TeamName);
+        Navigate(scrGame, ScreenTransition.Fade)
+      X: =0
+      Y: =0
+      Width: =10
+      Height: =10
+# ---------------- shared ----------------
+- lblOnlineHow:
+    Control: Label
+    Properties:
+      Text: |-
+        ="ONLINE DUO
+        ▶ EACH PLAYER ON THEIR OWN COMPUTER
+        ▶ P1 (HOST) GUESSES FIRST
+        ▶ TAKE TURNS - THE BOARD LOCKS
+          WHILE YOUR TEAMMATE THINKS
+        ▶ NO CHAT, NO CALLS, NO HINTS!
+        ▶ BOTH SCREENS SHOW THE SAME
+          CLUES AND GUESS LOG
+        ▶ ONE SHARED SCORE"
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =13
+      Color: =C_White
+      Fill: =C_Navy
+      BorderStyle: =BorderStyle.Solid
+      BorderThickness: =4
+      BorderColor: =C_Gold
+      VerticalAlign: =VerticalAlign.Top
+      PaddingLeft: =16
+      PaddingTop: =14
+      X: =810
+      Y: =160
+      Width: =484
+      Height: =440
+- btnBackLobby:
+    Control: Classic/Button
+    Properties:
+      Text: =If(gMySeat = 1, "◀ CANCEL ROOM", "◀ BACK")
+      OnSelect: |-
+        =If(
+            gMySeat = 1 && !IsBlank(gGame) && gGame.Status = "WAITING",
+            Patch(BottleGames, LookUp(BottleGames, ID = gGame.ID), {Status: "CANCELLED"})
+        );
+        Navigate(scrTeam, ScreenTransition.Fade)
+      Font: =Font.'Courier New'
+      FontWeight: =FontWeight.Bold
+      Size: =18
+      Fill: =C_Black
+      Color: =C_White
+      HoverFill: =C_Navy
+      HoverColor: =C_White
+      PressedFill: =C_Blue
+      PressedColor: =C_White
+      BorderColor: =C_Blue
+      BorderThickness: =4
+      RadiusTopLeft: =0
+      RadiusTopRight: =0
+      RadiusBottomLeft: =0
+      RadiusBottomRight: =0
+      X: =72
+      Y: =630
+      Width: =300
+      Height: =76
+- tmrLobby:
+    Control: Timer
+    Properties:
+      Duration: =2000
+      Repeat: =true
+      AutoStart: =true
+      Visible: =false
+      OnTimerEnd: |-
+        =Refresh(BottleGames);
+        If(
+            gMySeat = 1,
+                Set(gGame, LookUp(BottleGames, ID = gGame.ID));
+                If(
+                    gGame.Status = "PLAYING",
+                    Set(gP2, {Name: gGame.GuestName, Email: gGame.GuestEmail});
+                    Navigate(scrGame, ScreenTransition.Fade)
+                ),
+            Set(
+                gInvite,
+                First(
+                    Sort(
+                        Filter(BottleGames, GuestEmail = User().Email && Status = "WAITING"),
+                        ID,
+                        SortOrder.Descending
+                    )
+                )
+            )
+        )
+      X: =1200
+      Y: =700
+      Width: =40
+      Height: =20
