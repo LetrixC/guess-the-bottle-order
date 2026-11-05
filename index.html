@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guess the Bottle Order</title>
+<meta name="description" content="An 8-bit logic game by 9 Dots Consulting: crack the secret order of 4 bottles in 10 turns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1E4DFF; --blue-lt: #7A95FF; --navy: #0B1440; --black: #050505;
+    --white: #FFFFFF; --dim: #2A3670; --gold: #FFD60A; --red: #E8303A;
+    --px: 'Press Start 2P', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background-color: var(--black);
+    background-image: radial-gradient(#13235F 2px, transparent 2.5px);
+    background-size: 24px 24px;
+    color: var(--white);
+    font-family: var(--px);
+    font-size: 12px;
+    line-height: 1.7;
+    -webkit-font-smoothing: none;
+    image-rendering: pixelated;
+  }
+  .frame {
+    max-width: 1100px;
+    margin: 16px auto;
+    min-height: calc(100vh - 32px);
+    border: 6px solid var(--blue);
+    background: rgba(5, 5, 5, .55);
+    padding: 28px 32px 36px;
+    position: relative;
+  }
+  header.brand { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  header.brand img { width: 64px; height: 64px; }
+  header.brand .crumb { color: var(--blue-lt); font-size: 11px; }
+  h1, h2 { font-weight: normal; margin: 0; }
+  .title {
+    font-size: clamp(26px, 5.4vw, 52px);
+    line-height: 1.25;
+    text-shadow: 6px 6px 0 var(--blue);
+    margin: 4px 0 18px;
+  }
+  .sub { color: var(--blue-lt); margin: 0 0 22px; }
+  .parade { width: min(420px, 100%); display: block; margin: 8px 0 28px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .frame { padding: 20px 16px 28px; margin: 8px; } }
+
+  .btn {
+    font-family: var(--px); font-size: 13px; color: var(--white);
+    background: var(--blue); border: 4px solid var(--white);
+    box-shadow: 6px 6px 0 var(--black), 6px 6px 0 2px var(--blue-lt);
+    padding: 14px 20px; cursor: pointer; text-transform: uppercase;
+    transition: transform .05s;
+  }
+  .btn:hover { background: #3560FF; }
+  .btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--black); }
+  .btn:disabled, .btn.gold:disabled { background: var(--dim); color: #8892C0; border-color: #8892C0; cursor: not-allowed; box-shadow: none; }
+  .btn.ghost { background: transparent; border-color: var(--blue-lt); color: var(--blue-lt); box-shadow: none; }
+  .btn.ghost:hover { background: var(--navy); }
+  .btn.gold { background: var(--gold); color: var(--black); border-color: var(--black); }
+  .btn.big { font-size: 16px; padding: 18px 26px; }
+  .btn.sm { font-size: 10px; padding: 10px 12px; box-shadow: none; border-width: 3px; }
+  .btn:focus-visible, input:focus-visible, .slot:focus-visible, .pal:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+
+  .panel { border: 4px solid var(--dim); background: var(--navy); padding: 18px 20px; }
+  .panel h2 { font-size: 13px; color: var(--gold); margin-bottom: 12px; }
+  .panel p, .panel li { color: #CFD8FF; font-size: 10px; line-height: 2; margin: 0; }
+  .panel ul { margin: 0; padding-left: 18px; }
+
+  label.field { display: block; margin-bottom: 18px; }
+  label.field span { display: block; font-size: 10px; color: var(--blue-lt); margin-bottom: 8px; }
+  input[type=text] {
+    width: 100%; font-family: var(--px); font-size: 13px; color: var(--white);
+    background: var(--black); border: 4px solid var(--blue); padding: 12px; text-transform: uppercase;
+  }
+  input::placeholder { color: var(--dim); }
+
+  .screen { display: none; }
+  .screen.on { display: block; }
+
+  /* game */
+  .hud { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .hud .mode { color: var(--blue-lt); font-size: 11px; }
+  .hud .turn { color: var(--gold); font-size: 14px; }
+  .who { font-size: 14px; margin: 0 0 18px; min-height: 24px; }
+  .who b { color: var(--gold); font-weight: normal; }
+  .board { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; }
+  @media (max-width: 860px) { .board { grid-template-columns: 1fr; } }
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; max-width: 400px; }
+  .palette { max-width: 480px; }
+  .slot {
+    aspect-ratio: 12 / 22; background: var(--black); border: 4px dashed var(--dim);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 6px;
+    position: relative;
+  }
+  .slot.filled { border-style: solid; border-color: var(--blue); }
+  .slot img { width: 100%; height: 100%; }
+  .slot .n { position: absolute; top: -2px; left: 4px; font-size: 9px; color: var(--blue-lt); }
+  .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 20px; }
+  .pal {
+    background: var(--navy); border: 3px solid var(--dim); padding: 8px 6px 4px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--px);
+    color: var(--white); font-size: 7px;
+  }
+  .pal:hover:not(:disabled) { border-color: var(--blue-lt); }
+  .pal img { width: 100%; max-width: 44px; aspect-ratio: 12 / 22; }
+  .pal:disabled { opacity: .25; cursor: not-allowed; }
+  .clue { min-height: 48px; font-size: 11px; color: var(--blue-lt); margin-top: 18px; }
+  .clue b { color: var(--gold); font-weight: normal; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow: auto; }
+  .log li {
+    display: grid; grid-template-columns: 34px auto 1fr; align-items: center; gap: 10px;
+    border-bottom: 2px solid var(--dim); padding: 8px 2px; font-size: 10px;
+  }
+  .log .t { color: var(--blue-lt); }
+  .log .mini { display: flex; gap: 4px; }
+  .log .mini img { width: 16px; height: 29px; }
+  .log .fb { text-align: right; line-height: 1.8; }
+  .log .fb .p { color: var(--gold); }
+  .log .fb .c { color: #CFD8FF; }
+  .log .fb .by { display: block; color: var(--blue-lt); font-size: 8px; }
+  .empty { color: var(--dim); font-size: 10px; }
+  .legend { font-size: 9px; color: #CFD8FF; margin-top: 12px; line-height: 2; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(5, 5, 5, .94); display: none;
+    align-items: center; justify-content: center; z-index: 10; padding: 16px;
+  }
+  .overlay.on { display: flex; }
+  .overlay .box { border: 6px solid var(--blue); background: var(--navy); padding: 32px; max-width: 560px; text-align: center; }
+  .overlay h2 { font-size: 20px; color: var(--gold); margin-bottom: 16px; line-height: 1.5; }
+  .overlay p { font-size: 11px; color: #CFD8FF; margin: 0 0 24px; line-height: 2; }
+
+  /* result */
+  .restitle { font-size: clamp(20px, 4vw, 34px); margin: 0 0 18px; line-height: 1.4; }
+  .restitle.win { color: var(--gold); text-shadow: 4px 4px 0 var(--blue); }
+  canvas#card { width: 100%; max-width: 720px; height: auto; border: 4px solid var(--blue); display: block; image-rendering: auto; }
+  .share { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 22px; }
+  .toast { color: var(--gold); font-size: 10px; min-height: 18px; margin-top: 8px; }
+  footer { margin-top: 32px; color: var(--dim); font-size: 8px; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ================= HOME ================= -->
+  <section class="screen on" id="scrHome">
+    <header class="brand"><img class="logo" alt="9 Dots Consulting"></header>
+    <h1 class="title">GUESS THE<br>BOTTLE ORDER</h1>
+    <p class="sub">CRACK THE SECRET ORDER OF 4 BOTTLES IN 10 TURNS OR LESS</p>
+    <img class="parade" id="parade" alt="">
+    <div class="grid2">
+      <div>
+        <label class="field"><span>YOUR NAME</span>
+          <input type="text" id="inName" maxlength="20" placeholder="PLAYER 1" autocomplete="nickname"></label>
+        <div class="row">
+          <button class="btn big" id="btnSolo">1P SOLO ▶</button>
+          <button class="btn big gold" id="btnDuo">2P DUO TEAM ▶</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>HOW TO PLAY</h2>
+        <ul>
+          <li>4 bottles are hidden in a secret order. 6 colours, no repeats.</li>
+          <li>Pick a bottle for each slot, then press CONFIRM.</li>
+          <li>● PERFECT = right colour, right slot.</li>
+          <li>○ COLOUR ONLY = right colour, wrong slot.</li>
+          <li>Crack the code in 10 turns or fewer.</li>
+          <li>DUO: take turns on one device. No talking!</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DUO SETUP ================= -->
+  <section class="screen" id="scrTeam">
+    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">2P TEAM UP</span></header>
+    <h1 class="title" style="font-size:clamp(22px,4vw,40px)">2P TEAM UP</h1>
+    <div class="grid2">
+      <div>
+        <label class="field"><span>PLAYER 1</span>
+          <input type="text" id="inP1" maxlength="20" placeholder="PLAYER 1"></label>
+        <label class="field"><span>PLAYER 2 (YOUR TEAMMATE)</span>
+          <input type="text" id="inP2" maxlength="20" placeholder="PLAYER 2"></label>
+        <label class="field"><span>TEAM NAME</span>
+          <input type="text" id="inTeam" maxlength="20" placeholder="TEAM 9DOTS"></label>
+        <div class="row">
+          <button class="btn ghost" id="btnBackTeam">◀ BACK</button>
+          <button class="btn big gold" id="btnStartDuo">START ▶</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>DUO RULES</h2>
+        <ul>
+          <li>You share one secret code and one turn counter.</li>
+          <li>Players take turns: P1, P2, P1, P2...</li>
+          <li>Pass the device between turns. NO TALKING, NO HINTS!</li>
+          <li>Read the clues your teammate left in the log.</li>
+          <li>The result card shows both names and who guessed how often.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section class="screen" id="scrGame">
+    <header class="brand"><img class="logo" alt="9 Dots Consulting">
+      <span class="crumb" id="lblMode"></span></header>
+    <div class="hud">
+      <span class="turn" id="lblTurn"></span>
+      <button class="btn sm ghost" id="btnQuit">QUIT ✕</button>
+    </div>
+    <p class="who" id="lblWho"></p>
+    <div class="board">
+      <div>
+        <div class="slots" id="slots"></div>
+        <div class="palette" id="palette"></div>
+        <div class="row">
+          <button class="btn ghost" id="btnClear">CLEAR</button>
+          <button class="btn big gold" id="btnConfirm" disabled>CONFIRM ▶</button>
+        </div>
+        <div class="clue" id="lblClue" aria-live="polite"></div>
+      </div>
+      <div class="panel">
+        <h2>GUESS LOG</h2>
+        <ul class="log" id="log"></ul>
+        <div class="legend">● PERFECT = RIGHT COLOUR, RIGHT SLOT<br>○ COLOUR ONLY = RIGHT COLOUR, WRONG SLOT</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULT ================= -->
+  <section class="screen" id="scrResult">
+    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">RESULTS</span></header>
+    <h1 class="restitle" id="lblResTitle"></h1>
+    <div class="board">
+      <div><canvas id="card" width="720" height="450" aria-label="Result card"></canvas></div>
+      <div>
+        <div class="panel">
+          <h2>SHARE WITH FRIENDS</h2>
+          <div class="share">
+            <button class="btn sm" id="btnTeams">TEAMS</button>
+            <button class="btn sm" id="btnMail">EMAIL</button>
+            <button class="btn sm" id="btnCopy">COPY TEXT</button>
+            <button class="btn sm" id="btnPng">SAVE CARD</button>
+          </div>
+          <button class="btn sm gold" id="btnNative" style="width:100%;display:none">SHARE…</button>
+          <p class="toast" id="toast" aria-live="polite"></p>
+        </div>
+        <div class="row" style="margin-top:24px">
+          <button class="btn big gold" id="btnAgain">PLAY AGAIN ▶</button>
+          <button class="btn ghost" id="btnMenu">MENU</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 9 DOTS CONSULTING · GUESS THE BOTTLE ORDER</footer>
+</div>
+
+<!-- hand-off overlay for same-device Duo -->
+<div class="overlay" id="handoff" role="dialog" aria-modal="true">
+  <div class="box">
+    <h2 id="lblHand"></h2>
+    <p>PASS THE DEVICE. NO TALKING, NO HINTS!<br>READ THE GUESS LOG TO SEE WHAT YOUR TEAMMATE TRIED.</p>
+    <button class="btn big gold" id="btnReady">I'M READY ▶</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const MAX_TURNS = 10;
+  const BOTTLES = [
+    { id: 1, name: 'RED',    hex: '#E8303A' },
+    { id: 2, name: 'YELLOW', hex: '#FFD60A' },
+    { id: 3, name: 'GREEN',  hex: '#2EC45A' },
+    { id: 4, name: 'PURPLE', hex: '#9B4DFF' },
+    { id: 5, name: 'ORANGE', hex: '#FF8A1F' },
+    { id: 6, name: 'PINK',   hex: '#FF5CB8' }
+  ];
+  const byId = id => BOTTLES.find(b => b.id === id);
+  const $ = id => document.getElementById(id);
+
+  // ---------- pixel art ----------
+  // [x, y, w, h, colour, opacity]; 'F' = bottle colour
+  const BOTTLE_RECTS = [
+    [4, 0, 4, 3, '#050505'], [4, 3, 4, 5, '#050505'], [2, 7, 8, 2, '#050505'],
+    [1, 9, 10, 12, '#050505'], [2, 21, 8, 1, '#050505'],
+    [5, 1, 2, 1, '#FFFFFF'],
+    [5, 3, 2, 6, 'F'], [3, 8, 6, 1, 'F'], [2, 9, 8, 12, 'F'],
+    [2, 15, 8, 2, '#FFFFFF'], [3, 10, 1, 4, '#FFFFFF', .75], [8, 9, 1, 12, '#000000', .3]
+  ];
+  const svgUri = s => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
+  const bottleRects = (hex, ghost) => BOTTLE_RECTS.map(([x, y, w, h, c, o]) => {
+    let fill = c === 'F' ? hex : c;
+    if (ghost && c === '#FFFFFF') fill = '#2A3670';
+    return `<rect x='${x}' y='${y}' width='${w}' height='${h}' fill='${fill}'${o ? ` fill-opacity='${o}'` : ''}/>`;
+  }).join('');
+  const bottleSvg = (hex, ghost) => svgUri(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 22' shape-rendering='crispEdges'>${bottleRects(hex, ghost)}</svg>`);
+  const IMG = Object.fromEntries(BOTTLES.map(b => [b.id, bottleSvg(b.hex)]));
+  const EMPTY = bottleSvg('#1A2558', true);
+  const PARADE = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 22' shape-rendering='crispEdges'>${
+    BOTTLES.map((b, i) => `<g transform='translate(${i * 14},0)'>${bottleRects(b.hex)}</g>`).join('')}</svg>`);
+
+  // 9 Dots Consulting round logo
+  const LOGO_DOTS = [
+    [24.5, 4, '#D5DEEA'], [37, 4.5, '#C3D0E2'], [50.5, 5, '#ADC0D9'], [65, 5.5, '#93ACCD'],
+    [81, 6.5, '#7896BE'], [99, 7.5, '#5E80B0'], [119, 8.5, '#4569A0'], [141.5, 10, '#2D5491'], [167.5, 12, '#0F4C8A']
+  ];
+  const LOGO = svgUri(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>` +
+    `<circle cx='100' cy='100' r='95' fill='#FFFFFF' stroke='#1F4E86' stroke-width='7'/>` +
+    `<text x='100' y='98' text-anchor='middle' textLength='168' lengthAdjust='spacingAndGlyphs' font-family='Georgia,Times New Roman,serif' font-size='21' fill='#111111'>9 D<tspan font-size='16'>OTS</tspan> C<tspan font-size='16'>ONSULTING</tspan></text>` +
+    LOGO_DOTS.map(([x, r, c]) => `<ellipse cx='${x}' cy='123' rx='${r}' ry='${r * .72}' fill='${c}'/>`).join('') +
+    `</svg>`);
+
+  document.querySelectorAll('img.logo').forEach(i => { i.src = LOGO; });
+  $('parade').src = PARADE;
+
+  // ---------- storage (per-viewer convenience only) ----------
+  const store = {
+    get(k) { try { return localStorage.getItem('bottle.' + k) || ''; } catch (e) { return ''; } },
+    set(k, v) { try { localStorage.setItem('bottle.' + k, v); } catch (e) { /* ignore */ } }
+  };
+  $('inName').value = store.get('p1');
+  $('inP2').value = store.get('p2');
+  $('inTeam').value = store.get('team');
+
+  // ---------- state ----------
+  const st = { mode: 'SOLO', p1: '', p2: '', team: '', secret: [], guess: [0, 0, 0, 0], history: [], turn: 1, seat: 1, win: false };
+  const clean = (v, fallback) => (v || '').trim().toUpperCase().slice(0, 20) || fallback;
+  const seatName = s => s === 1 ? st.p1 : st.p2;
+
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+    window.scrollTo(0, 0);
+  }
+
+  function shuffle(a) {
+    const r = a.slice();
+    for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
+    return r;
+  }
+
+  function newGame() {
+    st.secret = shuffle(BOTTLES.map(b => b.id)).slice(0, 4);
+    st.guess = [0, 0, 0, 0];
+    st.history = [];
+    st.turn = 1; st.seat = 1; st.win = false;
+    $('lblClue').textContent = '';
+    renderGame();
+    show('scrGame');
+    if (st.mode === 'DUO') openHandoff();
+  }
+
+  // ---------- game rendering ----------
+  const slotsEl = $('slots'), palEl = $('palette'), logEl = $('log');
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement('div');
+    s.className = 'slot'; s.tabIndex = 0; s.setAttribute('role', 'button');
+    s.innerHTML = `<span class="n">${i + 1}</span><img alt="">`;
+    s.addEventListener('click', () => { st.guess[i] = 0; renderGame(); });
+    s.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.click(); } });
+    slotsEl.appendChild(s);
+  }
+  BOTTLES.forEach(b => {
+    const p = document.createElement('button');
+    p.className = 'pal'; p.dataset.id = b.id;
+    p.innerHTML = `<img src="${IMG[b.id]}" alt="">${b.name}`;
+    p.setAttribute('aria-label', 'Add ' + b.name + ' bottle');
+    p.addEventListener('click', () => {
+      const i = st.guess.indexOf(0);
+      if (i >= 0 && !st.guess.includes(b.id)) { st.guess[i] = b.id; renderGame(); }
+    });
+    palEl.appendChild(p);
+  });
+
+  function renderGame() {
+    $('lblMode').textContent = st.mode === 'SOLO' ? '1P SOLO · ' + st.p1 : '2P TEAM · ' + st.team;
+    $('lblTurn').textContent = `TURN ${Math.min(st.turn, MAX_TURNS)} / ${MAX_TURNS}`;
+    const who = $('lblWho');
+    who.textContent = '';
+    if (st.mode === 'DUO') {
+      who.append(`P${st.seat} `);
+      const b = document.createElement('b'); b.textContent = seatName(st.seat); who.append(b, ' — YOUR MOVE');
+    } else {
+      who.append('PICK 4 BOTTLES, THEN CONFIRM');
+    }
+    [...slotsEl.children].forEach((s, i) => {
+      const id = st.guess[i];
+      s.classList.toggle('filled', !!id);
+      s.querySelector('img').src = id ? IMG[id] : EMPTY;
+      s.setAttribute('aria-label', `Slot ${i + 1}: ${id ? byId(id).name + ' (click to remove)' : 'empty'}`);
+    });
+    [...palEl.children].forEach(p => { p.disabled = st.guess.includes(+p.dataset.id) || !st.guess.includes(0); });
+    $('btnConfirm').disabled = st.guess.includes(0);
+
+    logEl.innerHTML = '';
+    if (!st.history.length) {
+      const li = document.createElement('li'); li.className = 'empty'; li.style.display = 'block';
+      li.textContent = 'NO GUESSES YET.'; logEl.appendChild(li);
+    }
+    st.history.slice().reverse().forEach(h => {
+      const li = document.createElement('li');
+      const t = document.createElement('span'); t.className = 't'; t.textContent = '#' + h.turn;
+      const mini = document.createElement('span'); mini.className = 'mini';
+      h.guess.forEach(id => { const im = document.createElement('img'); im.src = IMG[id]; im.alt = byId(id).name; mini.appendChild(im); });
+      const fb = document.createElement('span'); fb.className = 'fb';
+      fb.innerHTML = `<span class="p">●${h.perfect}</span> <span class="c">○${h.colour}</span>`;
+      if (st.mode === 'DUO') { const by = document.createElement('span'); by.className = 'by'; by.textContent = 'P' + h.seat + ' ' + seatName(h.seat); fb.appendChild(by); }
+      li.append(t, mini, fb);
+      logEl.appendChild(li);
+    });
+  }
+
+  function confirmGuess() {
+    if (st.guess.includes(0)) return;
+    const perfect = st.guess.filter((id, i) => id === st.secret[i]).length;
+    const colour = st.guess.filter(id => st.secret.includes(id)).length - perfect;
+    st.history.push({ turn: st.turn, seat: st.seat, guess: st.guess.slice(), perfect, colour });
+    if (perfect === 4) { st.win = true; return finish(); }
+    if (st.turn >= MAX_TURNS) { st.win = false; return finish(); }
+    st.turn++;
+    st.guess = [0, 0, 0, 0];
+    const clue = $('lblClue');
+    clue.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = `${perfect} BOTTLE${perfect === 1 ? '' : 'S'} IN THE RIGHT POSITION.`;
+    clue.append(b, document.createElement('br'), `${colour} MORE RIGHT COLOUR${colour === 1 ? '' : 'S'}, WRONG SLOT.`);
+    if (st.mode === 'DUO') { st.seat = st.seat === 1 ? 2 : 1; openHandoff(); }
+    renderGame();
+  }
+
+  function openHandoff() {
+    $('lblHand').textContent = `P${st.seat} ${seatName(st.seat)}, YOUR TURN!`;
+    $('handoff').classList.add('on');
+    $('btnReady').focus();
+  }
+
+  // ---------- result ----------
+  async function finish() {
+    $('handoff').classList.remove('on');
+    const t = st.history.length;
+    const title = $('lblResTitle');
+    title.className = 'restitle' + (st.win ? ' win' : '');
+    title.textContent = st.win ? '★ CODE CRACKED! ★' : 'GAME OVER — THE BOTTLES WIN';
+    $('toast').textContent = '';
+    show('scrResult');
+    await drawCard();
+  }
+
+  function shareText() {
+    const t = st.history.length;
+    const who = st.mode === 'DUO' ? `Team ${st.team} (${st.p1} + ${st.p2})` : st.p1;
+    const res = st.win
+      ? ` cracked the secret bottle order in ${t} turn${t === 1 ? '' : 's'}!`
+      : ` couldn't crack the code in ${MAX_TURNS} turns... the bottles win this round.`;
+    return `GUESS THE BOTTLE ORDER · 9 DOTS CONSULTING\n${who}${res}\nCan you beat ${st.mode === 'DUO' ? 'us' : 'me'}? Play: ${pageUrl()}`;
+  }
+  const pageUrl = () => location.href.split('#')[0].split('?')[0];
+
+  function drawBottle(ctx, x, y, s, hex) {
+    BOTTLE_RECTS.forEach(([rx, ry, w, h, c, o]) => {
+      ctx.globalAlpha = o || 1;
+      ctx.fillStyle = c === 'F' ? hex : c;
+      ctx.fillRect(x + rx * s, y + ry * s, w * s, h * s);
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function drawLogo(ctx, cx, cy, size) {
+    const k = size / 200;
+    ctx.save();
+    ctx.translate(cx - size / 2, cy - size / 2);
+    ctx.scale(k, k);
+    ctx.beginPath(); ctx.arc(100, 100, 95, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = '#1F4E86'; ctx.stroke();
+    ctx.fillStyle = '#111111'; ctx.textBaseline = 'alphabetic';
+    const parts = [['9 D', 21], ['OTS', 16], [' C', 21], ['ONSULTING', 16]];
+    const widthOf = () => parts.reduce((w, [s, f]) => { ctx.font = `${f}px Georgia, "Times New Roman", serif`; return w + ctx.measureText(s).width; }, 0);
+    const scaleX = 168 / widthOf();
+    ctx.save(); ctx.translate(16, 98); ctx.scale(scaleX, 1);
+    let x = 0;
+    parts.forEach(([s, f]) => { ctx.font = `${f}px Georgia, "Times New Roman", serif`; ctx.fillText(s, x, 0); x += ctx.measureText(s).width; });
+    ctx.restore();
+    LOGO_DOTS.forEach(([x, r, c]) => { ctx.beginPath(); ctx.ellipse(x, 123, r, r * .72, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
+    ctx.restore();
+  }
+
+  async function drawCard() {
+    try { await document.fonts.load('16px "Press Start 2P"'); } catch (e) { /* fall back */ }
+    const c = $('card'), ctx = c.getContext('2d');
+    const PX = '"Press Start 2P", "Courier New", monospace';
+    const t = st.history.length;
+    const fit = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, 720, 450);
+    ctx.fillStyle = '#0B1440'; ctx.fillRect(12, 12, 696, 426);
+    ctx.lineWidth = 8; ctx.strokeStyle = '#1E4DFF'; ctx.strokeRect(16, 16, 688, 418);
+    drawLogo(ctx, 66, 62, 68);
+    const text = (s, x, y, size, col) => { ctx.font = `${size}px ${PX}`; ctx.fillStyle = col; ctx.fillText(s, x, y); };
+    text('GUESS THE BOTTLE ORDER', 112, 68, 14, '#7A95FF');
+    text(st.win ? 'CODE CRACKED!' : 'GAME OVER', 36, 142, 32, st.win ? '#FFD60A' : '#FFFFFF');
+    text(st.win ? `IN ${t} TURN${t === 1 ? '' : 'S'} / ${MAX_TURNS}` : `USED ALL ${MAX_TURNS} TURNS`, 36, 184, 16, '#FFFFFF');
+    if (st.mode === 'DUO') {
+      const g1 = st.history.filter(h => h.seat === 1).length, g2 = st.history.filter(h => h.seat === 2).length;
+      text('TEAM', 36, 238, 11, '#7A95FF');
+      text(fit(st.team, 18), 36, 266, 16, '#FFFFFF');
+      text('P1 ' + fit(st.p1, 18), 36, 310, 12, '#FFFFFF');
+      text(`   ${g1} GUESS${g1 === 1 ? '' : 'ES'}`, 36, 332, 10, '#7A95FF');
+      text('P2 ' + fit(st.p2, 18), 36, 366, 12, '#FFFFFF');
+      text(`   ${g2} GUESS${g2 === 1 ? '' : 'ES'}`, 36, 388, 10, '#7A95FF');
+    } else {
+      text('PLAYER', 36, 238, 11, '#7A95FF');
+      text(fit(st.p1, 18), 36, 268, 16, '#FFFFFF');
+    }
+    text('SECRET CODE', 450, 224, 11, '#7A95FF');
+    st.secret.forEach((id, i) => drawBottle(ctx, 450 + i * 60, 240, 4, byId(id).hex));
+    const d = new Date();
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    text(`${ds} · CAN YOU BEAT ${st.mode === 'DUO' ? 'US' : 'ME'}?`, 36, 418, 10, '#7A95FF');
+  }
+
+  function toast(msg) { $('toast').textContent = msg; }
+
+  // ---------- events ----------
+  $('btnSolo').addEventListener('click', () => {
+    st.mode = 'SOLO'; st.p1 = clean($('inName').value, 'PLAYER 1'); st.p2 = ''; st.team = '';
+    store.set('p1', $('inName').value.trim());
+    newGame();
+  });
+  $('btnDuo').addEventListener('click', () => {
+    store.set('p1', $('inName').value.trim());
+    $('inP1').value = $('inName').value;
+    show('scrTeam');
+    ($('inP1').value ? $('inP2') : $('inP1')).focus();
+  });
+  $('btnBackTeam').addEventListener('click', () => show('scrHome'));
+  $('btnStartDuo').addEventListener('click', () => {
+    st.mode = 'DUO';
+    st.p1 = clean($('inP1').value, 'PLAYER 1');
+    st.p2 = clean($('inP2').value, 'PLAYER 2');
+    st.team = clean($('inTeam').value, 'TEAM 9DOTS');
+    store.set('p1', $('inP1').value.trim()); store.set('p2', $('inP2').value.trim()); store.set('team', $('inTeam').value.trim());
+    $('inName').value = $('inP1').value;
+    newGame();
+  });
+  $('btnClear').addEventListener('click', () => { st.guess = [0, 0, 0, 0]; renderGame(); });
+  $('btnConfirm').addEventListener('click', confirmGuess);
+  $('btnReady').addEventListener('click', () => $('handoff').classList.remove('on'));
+  $('btnQuit').addEventListener('click', () => { if (confirm('Quit this game?')) show('scrHome'); });
+  $('btnAgain').addEventListener('click', newGame);
+  $('btnMenu').addEventListener('click', () => show('scrHome'));
+
+  $('btnTeams').addEventListener('click', () => {
+    window.open('https://teams.microsoft.com/share?href=' + encodeURIComponent(pageUrl()) +
+      '&msgText=' + encodeURIComponent(shareText()) + '&preview=true', '_blank', 'noopener,width=700,height=600');
+  });
+  $('btnMail').addEventListener('click', () => {
+    location.href = 'mailto:?subject=' + encodeURIComponent('Guess the Bottle Order — can you beat this?') +
+      '&body=' + encodeURIComponent(shareText());
+  });
+  $('btnCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(shareText()); toast('COPIED! PASTE IT IN TEAMS CHAT.'); }
+    catch (e) { toast('COPY BLOCKED — USE EMAIL OR TEAMS.'); }
+  });
+  $('btnPng').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = 'bottle-order-result.png';
+    a.href = $('card').toDataURL('image/png');
+    a.click();
+    toast('CARD SAVED. ATTACH IT IN TEAMS!');
+  });
+  if (navigator.share) {
+    const nb = $('btnNative'); nb.style.display = 'block';
+    nb.addEventListener('click', async () => {
+      try {
+        const blob = await new Promise(r => $('card').toBlob(r, 'image/png'));
+        const file = new File([blob], 'bottle-order-result.png', { type: 'image/png' });
+        const data = { title: 'Guess the Bottle Order', text: shareText() };
+        if (navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
+        await navigator.share(data);
+      } catch (e) { /* user cancelled */ }
+    });
+  }
+  document.querySelectorAll('input[type=text]').forEach(inp => inp.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (inp.id === 'inName') $('btnSolo').click();
+    else $('btnStartDuo').click();
+  }));
+  // keyboard: 1-6 add bottles, Backspace removes last, Enter confirms
+  document.addEventListener('keydown', e => {
+    if (!$('scrGame').classList.contains('on') || $('handoff').classList.contains('on')) return;
+    if (e.target.tagName === 'INPUT') return;
+    if (/^[1-6]$/.test(e.key)) palEl.children[+e.key - 1].click();
+    else if (e.key === 'Backspace') { const i = st.guess.map(Boolean).lastIndexOf(true); if (i >= 0) { st.guess[i] = 0; renderGame(); } }
+    else if (e.key === 'Enter' && !$('btnConfirm').disabled && document.activeElement.tagName !== 'BUTTON') confirmGuess();
+  });
+})();
+</script>
+</body>
+</html>
