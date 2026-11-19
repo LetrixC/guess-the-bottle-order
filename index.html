@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guess the Bottle Order</title>
-<meta name="description" content="An 8-bit logic game by 9 Dots Consulting: crack the secret order of 4 bottles in 10 turns, solo or as a duo.">
+<meta name="description" content="An 8-bit logic game: crack the secret order of 4 bottles in 10 turns, solo or as a duo.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -237,7 +237,7 @@
         <label class="field"><span>PLAYER 2 (YOUR TEAMMATE)</span>
           <input type="text" id="inP2" maxlength="20" placeholder="PLAYER 2"></label>
         <label class="field"><span>TEAM NAME</span>
-          <input type="text" id="inTeam" maxlength="20" placeholder="TEAM 9DOTS"></label>
+          <input type="text" id="inTeam" maxlength="20" placeholder="TEAM BOTTLES"></label>
         <span class="lbl">WHO STARTS FIRST?</span>
         <div class="starters">
           <button class="btn sm sel" id="btnLocalFirst1">PLAYER 1</button>
@@ -277,7 +277,7 @@
               <button class="btn sm" id="btnFirstThem">P2</button>
             </div>
             <label class="field"><span>TEAM NAME</span>
-              <input type="text" id="inTeamOnline" maxlength="20" placeholder="TEAM 9DOTS"></label>
+              <input type="text" id="inTeamOnline" maxlength="20" placeholder="TEAM BOTTLES"></label>
           </div>
           <div class="row">
             <button class="btn ghost" id="btnLeaveHost">◀ LEAVE</button>
@@ -377,7 +377,7 @@
     </div>
   </section>
 
-  <footer>© 9 DOTS CONSULTING · GUESS THE BOTTLE ORDER</footer>
+  <footer>GUESS THE BOTTLE ORDER</footer>
 </div>
 
 <!-- duo mode picker -->
@@ -682,7 +682,7 @@
     st.mode = 'DUO';
     st.p1 = clean($('inP1').value, 'PLAYER 1');
     st.p2 = clean($('inP2').value, 'PLAYER 2');
-    st.team = clean($('inTeam').value, 'TEAM 9DOTS');
+    st.team = clean($('inTeam').value, 'TEAM BOTTLES');
     store.set('p1', $('inP1').value.trim()); store.set('p2', $('inP2').value.trim()); store.set('team', $('inTeam').value.trim());
     $('inName').value = $('inP1').value;
     resetBoard(makeSecret(st.colours), st.localFirst);
@@ -929,7 +929,7 @@
 
   function hostStart() {
     if (net.role !== 'host' || !(net.conn && net.conn.open)) return;
-    st.team = clean($('inTeamOnline').value, 'TEAM 9DOTS');
+    st.team = clean($('inTeamOnline').value, 'TEAM BOTTLES');
     store.set('team', $('inTeamOnline').value.trim());
     const m = { t: 'start', secret: makeSecret(st.colours), colours: st.colours, starter: net.starter, p1: st.p1, p2: st.p2, team: st.team };
     net.send(m);
@@ -940,7 +940,7 @@
     st.mode = 'ONLINE';
     st.colours = m.colours;
     st.p1 = clean(String(m.p1 || ''), 'PLAYER 1'); st.p2 = clean(String(m.p2 || ''), 'PLAYER 2');
-    st.team = clean(String(m.team || ''), 'TEAM 9DOTS');
+    st.team = clean(String(m.team || ''), 'TEAM BOTTLES');
     resetBoard(m.secret.slice(), m.starter === 2 ? 2 : 1);
     renderGame(); show('scrGame');
     banner(st.seat === st.mySeat ? 'GAME ON! YOU START.' : `GAME ON! ${seatName(st.seat)} STARTS.`);
@@ -988,7 +988,7 @@
     const res = st.win
       ? ` cracked the secret bottle order in ${t} round${t === 1 ? '' : 's'} (${st.colours} bottles)! ${commentFor()}`
       : ` couldn't crack the code in ${MAX_TURNS} rounds... the bottles win this time.`;
-    return `GUESS THE BOTTLE ORDER · 9 DOTS CONSULTING\n${who}${res}\nCan you beat ${st.mode !== 'SOLO' ? 'us' : 'me'}? Play: ${pageUrl()}`;
+    return `GUESS THE BOTTLE ORDER\n${who}${res}\nCan you beat ${st.mode !== 'SOLO' ? 'us' : 'me'}? Play: ${pageUrl()}`;
   }
   const pageUrl = () => location.href.split('#')[0].split('?')[0];
 

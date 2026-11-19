@@ -1,6 +1,6 @@
-# Guess the Bottle Order · 9 Dots Consulting
+# Guess the Bottle Order
 
-An 8-bit, Mastermind-style logic game in 9 Dots blue, white and black.
+An 8-bit, Mastermind-style logic game in blue, white and black.
 
 **Play:** https://letrixc.github.io/guess-the-bottle-order/
 
