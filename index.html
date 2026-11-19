@@ -37,7 +37,6 @@
     position: relative;
   }
   header.brand { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-  header.brand img { width: 64px; height: 64px; }
   header.brand .crumb { color: var(--blue-lt); font-size: 11px; }
   h1, h2 { font-weight: normal; margin: 0; }
   .title {
@@ -195,7 +194,6 @@
 
   <!-- ================= HOME ================= -->
   <section class="screen on" id="scrHome">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting"></header>
     <h1 class="title">GUESS THE<br>BOTTLE ORDER</h1>
     <p class="sub">CRACK THE SECRET ORDER OF 4 BOTTLES IN 10 TURNS OR LESS</p>
     <img class="parade" id="parade" alt="">
@@ -230,7 +228,7 @@
 
   <!-- ================= SAME-DEVICE DUO SETUP ================= -->
   <section class="screen" id="scrTeam">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">2P SAME DEVICE</span></header>
+    <header class="brand"><span class="crumb">2P SAME DEVICE</span></header>
     <h1 class="title mid">2P TEAM UP</h1>
     <div class="grid2">
       <div>
@@ -263,7 +261,7 @@
 
   <!-- ================= ONLINE LOBBY ================= -->
   <section class="screen" id="scrLobby">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb" id="lblLobbyCrumb">2P ONLINE</span></header>
+    <header class="brand"><span class="crumb" id="lblLobbyCrumb">2P ONLINE</span></header>
     <h1 class="title mid" id="lblLobbyTitle">ONLINE ROOM</h1>
     <div class="grid2">
       <div>
@@ -316,7 +314,7 @@
 
   <!-- ================= GAME ================= -->
   <section class="screen" id="scrGame">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting">
+    <header class="brand">
       <span class="crumb" id="lblMode"></span></header>
     <div class="hud">
       <span class="turn" id="lblTurn"></span>
@@ -343,7 +341,7 @@
 
   <!-- ================= RESULT ================= -->
   <section class="screen" id="scrResult">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">RESULTS</span></header>
+    <header class="brand"><span class="crumb">RESULTS</span></header>
     <h1 class="restitle" id="lblResTitle"></h1>
     <p class="comment" id="lblComment"></p>
     <div class="board">
@@ -463,17 +461,6 @@
   const parade = n => svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 22' shape-rendering='crispEdges'>${
     ALL_BOTTLES.slice(0, n).map((b, i) => `<g transform='translate(${i * 14},0)'>${bottleRects(b.hex)}</g>`).join('')}</svg>`);
 
-  const LOGO_DOTS = [
-    [24.5, 4, '#D5DEEA'], [37, 4.5, '#C3D0E2'], [50.5, 5, '#ADC0D9'], [65, 5.5, '#93ACCD'],
-    [81, 6.5, '#7896BE'], [99, 7.5, '#5E80B0'], [119, 8.5, '#4569A0'], [141.5, 10, '#2D5491'], [167.5, 12, '#0F4C8A']
-  ];
-  const LOGO = svgUri(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>` +
-    `<circle cx='100' cy='100' r='95' fill='#FFFFFF' stroke='#1F4E86' stroke-width='7'/>` +
-    `<text x='100' y='98' text-anchor='middle' textLength='168' lengthAdjust='spacingAndGlyphs' font-family='Georgia,Times New Roman,serif' font-size='21' fill='#111111'>9 D<tspan font-size='16'>OTS</tspan> C<tspan font-size='16'>ONSULTING</tspan></text>` +
-    LOGO_DOTS.map(([x, r, c]) => `<ellipse cx='${x}' cy='123' rx='${r}' ry='${r * .72}' fill='${c}'/>`).join('') +
-    `</svg>`);
-  document.querySelectorAll('img.logo').forEach(i => { i.src = LOGO; });
 
   // ---------- storage (per-viewer convenience only) ----------
   const store = {
@@ -1014,25 +1001,6 @@
     ctx.globalAlpha = 1;
   }
 
-  function drawLogo(ctx, cx, cy, size) {
-    const k = size / 200;
-    ctx.save();
-    ctx.translate(cx - size / 2, cy - size / 2);
-    ctx.scale(k, k);
-    ctx.beginPath(); ctx.arc(100, 100, 95, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = '#1F4E86'; ctx.stroke();
-    ctx.fillStyle = '#111111';
-    const parts = [['9 D', 21], ['OTS', 16], [' C', 21], ['ONSULTING', 16]];
-    const font = f => `${f}px Georgia, "Times New Roman", serif`;
-    const total = parts.reduce((w, [s, f]) => { ctx.font = font(f); return w + ctx.measureText(s).width; }, 0);
-    ctx.save(); ctx.translate(16, 98); ctx.scale(168 / total, 1);
-    let x = 0;
-    parts.forEach(([s, f]) => { ctx.font = font(f); ctx.fillText(s, x, 0); x += ctx.measureText(s).width; });
-    ctx.restore();
-    LOGO_DOTS.forEach(([dx, r, c]) => { ctx.beginPath(); ctx.ellipse(dx, 123, r, r * .72, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
-    ctx.restore();
-  }
-
   async function drawCard() {
     try { await document.fonts.load('16px "Press Start 2P"'); } catch (e) { /* fall back */ }
     const c = $('card'), ctx = c.getContext('2d');
@@ -1043,8 +1011,7 @@
     ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, 720, 450);
     ctx.fillStyle = '#0B1440'; ctx.fillRect(12, 12, 696, 426);
     ctx.lineWidth = 8; ctx.strokeStyle = '#1E4DFF'; ctx.strokeRect(16, 16, 688, 418);
-    drawLogo(ctx, 66, 62, 68);
-    text('GUESS THE BOTTLE ORDER', 112, 68, 14, '#7A95FF');
+    text('GUESS THE BOTTLE ORDER', 36, 68, 14, '#7A95FF');
     text(st.win ? 'CODE CRACKED!' : 'GAME OVER', 36, 140, 32, st.win ? '#FFD60A' : '#FFFFFF');
     text(st.win ? `IN ${t} ROUND${t === 1 ? '' : 'S'} / ${MAX_TURNS}` : `USED ALL ${MAX_TURNS} ROUNDS`, 36, 178, 14, '#FFFFFF');
     text(commentFor(), 36, 206, 12, '#FFD60A');
