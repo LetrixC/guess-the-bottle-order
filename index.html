@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guess the Bottle Order</title>
-<meta name="description" content="An 8-bit logic game by 9 Dots Consulting: crack the secret order of 4 bottles in 10 turns.">
+<meta name="description" content="An 8-bit logic game by 9 Dots Consulting: crack the secret order of 4 bottles in 10 turns, solo or as a duo.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
   :root {
     --blue: #1E4DFF; --blue-lt: #7A95FF; --navy: #0B1440; --black: #050505;
-    --white: #FFFFFF; --dim: #2A3670; --gold: #FFD60A; --red: #E8303A;
+    --white: #FFFFFF; --dim: #2A3670; --gold: #FFD60A; --red: #E8303A; --green: #2EC45A;
     --px: 'Press Start 2P', 'Courier New', monospace;
   }
   * { box-sizing: border-box; }
@@ -25,7 +26,6 @@
     font-size: 12px;
     line-height: 1.7;
     -webkit-font-smoothing: none;
-    image-rendering: pixelated;
   }
   .frame {
     max-width: 1100px;
@@ -46,8 +46,9 @@
     text-shadow: 6px 6px 0 var(--blue);
     margin: 4px 0 18px;
   }
+  .title.mid { font-size: clamp(22px, 4vw, 40px); }
   .sub { color: var(--blue-lt); margin: 0 0 22px; }
-  .parade { width: min(420px, 100%); display: block; margin: 8px 0 28px; }
+  .parade { width: min(420px, 100%); display: block; margin: 8px 0 24px; }
   .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
   @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .frame { padding: 20px 16px 28px; margin: 8px; } }
@@ -61,13 +62,14 @@
   }
   .btn:hover { background: #3560FF; }
   .btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--black); }
-  .btn:disabled, .btn.gold:disabled { background: var(--dim); color: #8892C0; border-color: #8892C0; cursor: not-allowed; box-shadow: none; }
   .btn.ghost { background: transparent; border-color: var(--blue-lt); color: var(--blue-lt); box-shadow: none; }
   .btn.ghost:hover { background: var(--navy); }
   .btn.gold { background: var(--gold); color: var(--black); border-color: var(--black); }
   .btn.big { font-size: 16px; padding: 18px 26px; }
   .btn.sm { font-size: 10px; padding: 10px 12px; box-shadow: none; border-width: 3px; }
-  .btn:focus-visible, input:focus-visible, .slot:focus-visible, .pal:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+  .btn.wide { width: 100%; }
+  .btn:disabled, .btn.gold:disabled { background: var(--dim); color: #8892C0; border-color: #8892C0; cursor: not-allowed; box-shadow: none; }
+  .btn:focus-visible, input:focus-visible, .slot:focus-visible, .pal:focus-visible, .opt:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
 
   .panel { border: 4px solid var(--dim); background: var(--navy); padding: 18px 20px; }
   .panel h2 { font-size: 13px; color: var(--gold); margin-bottom: 12px; }
@@ -75,26 +77,37 @@
   .panel ul { margin: 0; padding-left: 18px; }
 
   label.field { display: block; margin-bottom: 18px; }
-  label.field span { display: block; font-size: 10px; color: var(--blue-lt); margin-bottom: 8px; }
+  label.field span, .lbl { display: block; font-size: 10px; color: var(--blue-lt); margin-bottom: 8px; }
   input[type=text] {
     width: 100%; font-family: var(--px); font-size: 13px; color: var(--white);
     background: var(--black); border: 4px solid var(--blue); padding: 12px; text-transform: uppercase;
   }
+  input:disabled { opacity: .5; }
   input::placeholder { color: var(--dim); }
+  input.codein { font-size: 28px; letter-spacing: 14px; text-align: center; max-width: 260px; }
+
+  /* setting: number of bottles */
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+  .opt {
+    font-family: var(--px); font-size: 10px; color: var(--blue-lt); background: var(--black);
+    border: 3px solid var(--dim); padding: 10px 12px; cursor: pointer; line-height: 1.8; text-align: left;
+  }
+  .opt small { display: block; font-size: 8px; color: var(--dim); }
+  .opt.sel { border-color: var(--gold); color: var(--gold); background: var(--navy); }
+  .opt.sel small { color: #CFD8FF; }
 
   .screen { display: none; }
   .screen.on { display: block; }
 
   /* game */
   .hud { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-  .hud .mode { color: var(--blue-lt); font-size: 11px; }
   .hud .turn { color: var(--gold); font-size: 14px; }
   .who { font-size: 14px; margin: 0 0 18px; min-height: 24px; }
   .who b { color: var(--gold); font-weight: normal; }
+  .who.wait { color: var(--blue-lt); }
   .board { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; }
   @media (max-width: 860px) { .board { grid-template-columns: 1fr; } }
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; max-width: 400px; }
-  .palette { max-width: 480px; }
   .slot {
     aspect-ratio: 12 / 22; background: var(--black); border: 4px dashed var(--dim);
     display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 6px;
@@ -103,47 +116,77 @@
   .slot.filled { border-style: solid; border-color: var(--blue); }
   .slot img { width: 100%; height: 100%; }
   .slot .n { position: absolute; top: -2px; left: 4px; font-size: 9px; color: var(--blue-lt); }
-  .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 20px; }
+  .locked .slot, .locked .pal { cursor: not-allowed; }
+  .locked .slot.filled { border-color: var(--dim); }
+  .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 20px; max-width: 480px; }
   .pal {
     background: var(--navy); border: 3px solid var(--dim); padding: 8px 6px 4px; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--px);
     color: var(--white); font-size: 7px;
   }
+  .pal[hidden] { display: none; }
   .pal:hover:not(:disabled) { border-color: var(--blue-lt); }
   .pal img { width: 100%; max-width: 44px; aspect-ratio: 12 / 22; }
   .pal:disabled { opacity: .25; cursor: not-allowed; }
   .clue { min-height: 48px; font-size: 11px; color: var(--blue-lt); margin-top: 18px; }
   .clue b { color: var(--gold); font-weight: normal; }
   .log { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow: auto; }
-  .log li {
+  .log li, .rec li {
     display: grid; grid-template-columns: 34px auto 1fr; align-items: center; gap: 10px;
     border-bottom: 2px solid var(--dim); padding: 8px 2px; font-size: 10px;
   }
-  .log .t { color: var(--blue-lt); }
-  .log .mini { display: flex; gap: 4px; }
-  .log .mini img { width: 16px; height: 29px; }
-  .log .fb { text-align: right; line-height: 1.8; }
-  .log .fb .p { color: var(--gold); }
-  .log .fb .c { color: #CFD8FF; }
-  .log .fb .by { display: block; color: var(--blue-lt); font-size: 8px; }
-  .empty { color: var(--dim); font-size: 10px; }
+  .log .t, .rec .t { color: var(--blue-lt); }
+  .mini { display: flex; gap: 4px; }
+  .mini img { width: 16px; height: 29px; }
+  .fb { text-align: right; line-height: 1.8; }
+  .fb .p { color: var(--gold); }
+  .fb .c { color: #CFD8FF; }
+  .fb .by { display: block; color: var(--blue-lt); font-size: 8px; }
+  .empty { color: var(--dim); font-size: 10px; display: block !important; }
   .legend { font-size: 9px; color: #CFD8FF; margin-top: 12px; line-height: 2; }
+
+  .banner {
+    position: fixed; left: 50%; top: 24px; transform: translateX(-50%); z-index: 20;
+    background: var(--gold); color: var(--black); border: 4px solid var(--black);
+    box-shadow: 6px 6px 0 var(--blue); padding: 14px 20px; font-size: 12px; text-align: center;
+    max-width: calc(100vw - 32px); opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .banner.on { opacity: 1; }
 
   .overlay {
     position: fixed; inset: 0; background: rgba(5, 5, 5, .94); display: none;
     align-items: center; justify-content: center; z-index: 10; padding: 16px;
   }
   .overlay.on { display: flex; }
-  .overlay .box { border: 6px solid var(--blue); background: var(--navy); padding: 32px; max-width: 560px; text-align: center; }
-  .overlay h2 { font-size: 20px; color: var(--gold); margin-bottom: 16px; line-height: 1.5; }
-  .overlay p { font-size: 11px; color: #CFD8FF; margin: 0 0 24px; line-height: 2; }
+  .overlay .box { border: 6px solid var(--blue); background: var(--navy); padding: 32px; max-width: 580px; width: 100%; text-align: center; }
+  .overlay h2 { font-size: 18px; color: var(--gold); margin-bottom: 16px; line-height: 1.5; }
+  .overlay p { font-size: 11px; color: #CFD8FF; margin: 0 0 22px; line-height: 2; }
+  .overlay .stack { display: grid; gap: 16px; }
+  .overlay .stack .btn small { display: block; font-size: 8px; margin-top: 8px; text-transform: none; opacity: .85; }
+  .lastres { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 0 0 22px; font-size: 12px; }
+  .lastres .p { color: var(--gold); } .lastres .c { color: #CFD8FF; }
+
+  /* lobby */
+  .code { font-size: clamp(40px, 8vw, 64px); letter-spacing: 18px; color: var(--gold); text-shadow: 5px 5px 0 var(--blue); margin: 6px 0 18px; }
+  .status { font-size: 11px; color: #CFD8FF; min-height: 40px; line-height: 2; margin: 0 0 18px; }
+  .status b { color: var(--gold); font-weight: normal; }
+  .status.err { color: #FF7A80; }
+  .dot { display: inline-block; width: 10px; height: 10px; background: var(--gold); margin-right: 8px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .starters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 18px; }
+  .btn.sel { background: var(--gold); color: var(--black); border-color: var(--black); }
 
   /* result */
-  .restitle { font-size: clamp(20px, 4vw, 34px); margin: 0 0 18px; line-height: 1.4; }
+  .restitle { font-size: clamp(20px, 4vw, 34px); margin: 0 0 8px; line-height: 1.4; }
   .restitle.win { color: var(--gold); text-shadow: 4px 4px 0 var(--blue); }
-  canvas#card { width: 100%; max-width: 720px; height: auto; border: 4px solid var(--blue); display: block; image-rendering: auto; }
-  .share { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 22px; }
+  .comment { font-size: clamp(14px, 2.6vw, 22px); color: var(--white); margin: 0 0 20px; }
+  canvas#card { width: 100%; max-width: 720px; height: auto; border: 4px solid var(--blue); display: block; }
+  .rec { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto; }
+  .sess { font-size: 9px; color: #CFD8FF; line-height: 2.2; margin: 0; padding-left: 18px; }
+  .sess .w { color: var(--gold); }
+  .share { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 12px; }
   .toast { color: var(--gold); font-size: 10px; min-height: 18px; margin-top: 8px; }
+  .stackcol { display: grid; gap: 22px; align-content: start; }
   footer { margin-top: 32px; color: var(--dim); font-size: 8px; }
 </style>
 </head>
@@ -160,6 +203,12 @@
       <div>
         <label class="field"><span>YOUR NAME</span>
           <input type="text" id="inName" maxlength="20" placeholder="PLAYER 1" autocomplete="nickname"></label>
+        <span class="lbl">GAME SETTING</span>
+        <div class="opts" id="opts" role="radiogroup" aria-label="Number of bottles">
+          <button class="opt" data-n="4" role="radio">4 BOTTLES<small>4 PLACES · EASY</small></button>
+          <button class="opt" data-n="5" role="radio">5 BOTTLES<small>4 PLACES · MEDIUM</small></button>
+          <button class="opt" data-n="6" role="radio">6 BOTTLES<small>4 PLACES · HARD</small></button>
+        </div>
         <div class="row">
           <button class="btn big" id="btnSolo">1P SOLO ▶</button>
           <button class="btn big gold" id="btnDuo">2P DUO TEAM ▶</button>
@@ -168,21 +217,21 @@
       <div class="panel">
         <h2>HOW TO PLAY</h2>
         <ul>
-          <li>4 bottles are hidden in a secret order. 6 colours, no repeats.</li>
-          <li>Pick a bottle for each slot, then press CONFIRM.</li>
-          <li>● PERFECT = right colour, right slot.</li>
-          <li>○ COLOUR ONLY = right colour, wrong slot.</li>
+          <li>4 bottles are hidden in a secret order. No colour repeats.</li>
+          <li>Pick a bottle for each place, then press CONFIRM.</li>
+          <li>● PERFECT = right colour, right place.</li>
+          <li>○ COLOUR ONLY = right colour, wrong place.</li>
           <li>Crack the code in 10 turns or fewer.</li>
-          <li>DUO: take turns on one device. No talking!</li>
+          <li>DUO: create an online room and share the 4-digit code, or play on one device. Take turns. No talking!</li>
         </ul>
       </div>
     </div>
   </section>
 
-  <!-- ================= DUO SETUP ================= -->
+  <!-- ================= SAME-DEVICE DUO SETUP ================= -->
   <section class="screen" id="scrTeam">
-    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">2P TEAM UP</span></header>
-    <h1 class="title" style="font-size:clamp(22px,4vw,40px)">2P TEAM UP</h1>
+    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">2P SAME DEVICE</span></header>
+    <h1 class="title mid">2P TEAM UP</h1>
     <div class="grid2">
       <div>
         <label class="field"><span>PLAYER 1</span>
@@ -191,19 +240,75 @@
           <input type="text" id="inP2" maxlength="20" placeholder="PLAYER 2"></label>
         <label class="field"><span>TEAM NAME</span>
           <input type="text" id="inTeam" maxlength="20" placeholder="TEAM 9DOTS"></label>
+        <span class="lbl">WHO STARTS FIRST?</span>
+        <div class="starters">
+          <button class="btn sm sel" id="btnLocalFirst1">PLAYER 1</button>
+          <button class="btn sm" id="btnLocalFirst2">PLAYER 2</button>
+        </div>
         <div class="row">
           <button class="btn ghost" id="btnBackTeam">◀ BACK</button>
           <button class="btn big gold" id="btnStartDuo">START ▶</button>
         </div>
       </div>
       <div class="panel">
-        <h2>DUO RULES</h2>
+        <h2>SAME-DEVICE RULES</h2>
         <ul>
           <li>You share one secret code and one turn counter.</li>
-          <li>Players take turns: P1, P2, P1, P2...</li>
-          <li>Pass the device between turns. NO TALKING, NO HINTS!</li>
-          <li>Read the clues your teammate left in the log.</li>
-          <li>The result card shows both names and who guessed how often.</li>
+          <li>Players take turns. After each guess the result is shown and the device passes to your teammate.</li>
+          <li>NO TALKING, NO HINTS! Read the clues in the log.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ONLINE LOBBY ================= -->
+  <section class="screen" id="scrLobby">
+    <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb" id="lblLobbyCrumb">2P ONLINE</span></header>
+    <h1 class="title mid" id="lblLobbyTitle">ONLINE ROOM</h1>
+    <div class="grid2">
+      <div>
+        <!-- host -->
+        <div id="hostBox">
+          <span class="lbl">ROOM CODE</span>
+          <div class="code" id="lblCode">····</div>
+          <p class="status" id="lblHostStatus"></p>
+          <div id="starterBox" hidden>
+            <span class="lbl">WHO STARTS FIRST?</span>
+            <div class="starters">
+              <button class="btn sm sel" id="btnFirstMe">ME</button>
+              <button class="btn sm" id="btnFirstThem">P2</button>
+            </div>
+            <label class="field"><span>TEAM NAME</span>
+              <input type="text" id="inTeamOnline" maxlength="20" placeholder="TEAM 9DOTS"></label>
+          </div>
+          <div class="row">
+            <button class="btn ghost" id="btnLeaveHost">◀ LEAVE</button>
+            <button class="btn sm" id="btnCopyInvite">COPY INVITE</button>
+            <button class="btn big gold" id="btnStartOnline" disabled>START ▶</button>
+          </div>
+        </div>
+        <!-- guest -->
+        <div id="guestBox">
+          <label class="field"><span>YOUR NAME</span>
+            <input type="text" id="inNameJoin" maxlength="20" placeholder="PLAYER 2" autocomplete="nickname"></label>
+          <label class="field"><span>ENTER THE 4-DIGIT ROOM CODE</span>
+            <input type="text" class="codein" id="inCode" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="0000" autocomplete="off"></label>
+          <p class="status" id="lblGuestStatus"></p>
+          <div class="row">
+            <button class="btn ghost" id="btnLeaveGuest">◀ LEAVE</button>
+            <button class="btn big gold" id="btnJoin">JOIN ▶</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>ONLINE ROOM</h2>
+        <ul>
+          <li>Each player uses their own computer or phone.</li>
+          <li>The creator shares the 4-digit code. The other player enters it.</li>
+          <li>Max 2 players per room. A third player is turned away.</li>
+          <li>The room creator picks who starts and the bottle setting.</li>
+          <li>Take turns. After each guess both screens show the result and switch player.</li>
+          <li>Keep this page open: closing it ends the room.</li>
         </ul>
       </div>
     </div>
@@ -219,7 +324,7 @@
     </div>
     <p class="who" id="lblWho"></p>
     <div class="board">
-      <div>
+      <div id="playArea">
         <div class="slots" id="slots"></div>
         <div class="palette" id="palette"></div>
         <div class="row">
@@ -231,7 +336,7 @@
       <div class="panel">
         <h2>GUESS LOG</h2>
         <ul class="log" id="log"></ul>
-        <div class="legend">● PERFECT = RIGHT COLOUR, RIGHT SLOT<br>○ COLOUR ONLY = RIGHT COLOUR, WRONG SLOT</div>
+        <div class="legend">● PERFECT = RIGHT COLOUR, RIGHT PLACE<br>○ COLOUR ONLY = RIGHT COLOUR, WRONG PLACE</div>
       </div>
     </div>
   </section>
@@ -240,9 +345,21 @@
   <section class="screen" id="scrResult">
     <header class="brand"><img class="logo" alt="9 Dots Consulting"><span class="crumb">RESULTS</span></header>
     <h1 class="restitle" id="lblResTitle"></h1>
+    <p class="comment" id="lblComment"></p>
     <div class="board">
-      <div><canvas id="card" width="720" height="450" aria-label="Result card"></canvas></div>
-      <div>
+      <div class="stackcol">
+        <canvas id="card" width="720" height="450" aria-label="Result card"></canvas>
+        <div class="panel">
+          <h2>ALL ROUNDS</h2>
+          <ul class="rec" id="rec"></ul>
+        </div>
+      </div>
+      <div class="stackcol">
+        <div class="row">
+          <button class="btn big gold" id="btnAgain">RESTART ▶</button>
+          <button class="btn ghost" id="btnMenu">MENU</button>
+        </div>
+        <p class="status" id="lblAgainStatus"></p>
         <div class="panel">
           <h2>SHARE WITH FRIENDS</h2>
           <div class="share">
@@ -251,12 +368,12 @@
             <button class="btn sm" id="btnCopy">COPY TEXT</button>
             <button class="btn sm" id="btnPng">SAVE CARD</button>
           </div>
-          <button class="btn sm gold" id="btnNative" style="width:100%;display:none">SHARE…</button>
+          <button class="btn sm gold wide" id="btnNative" hidden>SHARE…</button>
           <p class="toast" id="toast" aria-live="polite"></p>
         </div>
-        <div class="row" style="margin-top:24px">
-          <button class="btn big gold" id="btnAgain">PLAY AGAIN ▶</button>
-          <button class="btn ghost" id="btnMenu">MENU</button>
+        <div class="panel">
+          <h2>THIS SESSION</h2>
+          <ol class="sess" id="sess"></ol>
         </div>
       </div>
     </div>
@@ -265,20 +382,51 @@
   <footer>© 9 DOTS CONSULTING · GUESS THE BOTTLE ORDER</footer>
 </div>
 
+<!-- duo mode picker -->
+<div class="overlay" id="duoPick" role="dialog" aria-modal="true" aria-labelledby="duoPickTitle">
+  <div class="box">
+    <h2 id="duoPickTitle">2P DUO TEAM</h2>
+    <p>PLAY TOGETHER ONLINE, EACH ON YOUR OWN SCREEN.</p>
+    <div class="stack">
+      <button class="btn big gold" id="btnCreate">CREATE ROOM<small>Get a 4-digit code to share</small></button>
+      <button class="btn big" id="btnJoinRoom">JOIN ROOM<small>Enter your teammate's code</small></button>
+      <button class="btn sm ghost" id="btnSameDevice">SAME DEVICE (PASS AND PLAY)</button>
+      <button class="btn sm ghost" id="btnDuoCancel">CANCEL</button>
+    </div>
+  </div>
+</div>
+
 <!-- hand-off overlay for same-device Duo -->
 <div class="overlay" id="handoff" role="dialog" aria-modal="true">
   <div class="box">
+    <div id="handLast"></div>
     <h2 id="lblHand"></h2>
-    <p>PASS THE DEVICE. NO TALKING, NO HINTS!<br>READ THE GUESS LOG TO SEE WHAT YOUR TEAMMATE TRIED.</p>
+    <p>PASS THE DEVICE. NO TALKING, NO HINTS!</p>
     <button class="btn big gold" id="btnReady">I'M READY ▶</button>
   </div>
 </div>
+
+<!-- notices (disconnect, room full, quit) -->
+<div class="overlay" id="notice" role="alertdialog" aria-modal="true">
+  <div class="box">
+    <h2 id="lblNotice"></h2>
+    <p id="lblNoticeSub"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn sm ghost" id="btnNoticeCancel" hidden>CANCEL</button>
+      <button class="btn big gold" id="btnNoticeOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="banner" id="banner" aria-live="assertive"></div>
 
 <script>
 (() => {
   'use strict';
   const MAX_TURNS = 10;
-  const BOTTLES = [
+  const PLACES = 4;
+  const ROOM_PREFIX = 'ninedots-bottle-order-v1-';
+  const ALL_BOTTLES = [
     { id: 1, name: 'RED',    hex: '#E8303A' },
     { id: 2, name: 'YELLOW', hex: '#FFD60A' },
     { id: 3, name: 'GREEN',  hex: '#2EC45A' },
@@ -286,11 +434,15 @@
     { id: 5, name: 'ORANGE', hex: '#FF8A1F' },
     { id: 6, name: 'PINK',   hex: '#FF5CB8' }
   ];
-  const byId = id => BOTTLES.find(b => b.id === id);
+  const COMMENTS = {
+    1: 'MIND READER?!', 2: 'ARE YOU PSYCHIC?!', 3: '180 IQ!', 4: 'HOLY CRAB!', 5: 'IMPRESSIVE!',
+    6: 'SHARP THINKING!', 7: 'NICE WORK!', 8: 'GETTING THERE!', 9: 'PHEW, CLOSE ONE!', 10: 'AT LEAST YOU MADE IT!'
+  };
+  const FAIL_COMMENT = 'NICE TRY, ONE MORE TIME?';
+  const byId = id => ALL_BOTTLES.find(b => b.id === id);
   const $ = id => document.getElementById(id);
 
   // ---------- pixel art ----------
-  // [x, y, w, h, colour, opacity]; 'F' = bottle colour
   const BOTTLE_RECTS = [
     [4, 0, 4, 3, '#050505'], [4, 3, 4, 5, '#050505'], [2, 7, 8, 2, '#050505'],
     [1, 9, 10, 12, '#050505'], [2, 21, 8, 1, '#050505'],
@@ -306,12 +458,11 @@
   }).join('');
   const bottleSvg = (hex, ghost) => svgUri(
     `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 22' shape-rendering='crispEdges'>${bottleRects(hex, ghost)}</svg>`);
-  const IMG = Object.fromEntries(BOTTLES.map(b => [b.id, bottleSvg(b.hex)]));
+  const IMG = Object.fromEntries(ALL_BOTTLES.map(b => [b.id, bottleSvg(b.hex)]));
   const EMPTY = bottleSvg('#1A2558', true);
-  const PARADE = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 22' shape-rendering='crispEdges'>${
-    BOTTLES.map((b, i) => `<g transform='translate(${i * 14},0)'>${bottleRects(b.hex)}</g>`).join('')}</svg>`);
+  const parade = n => svgUri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 22' shape-rendering='crispEdges'>${
+    ALL_BOTTLES.slice(0, n).map((b, i) => `<g transform='translate(${i * 14},0)'>${bottleRects(b.hex)}</g>`).join('')}</svg>`);
 
-  // 9 Dots Consulting round logo
   const LOGO_DOTS = [
     [24.5, 4, '#D5DEEA'], [37, 4.5, '#C3D0E2'], [50.5, 5, '#ADC0D9'], [65, 5.5, '#93ACCD'],
     [81, 6.5, '#7896BE'], [99, 7.5, '#5E80B0'], [119, 8.5, '#4569A0'], [141.5, 10, '#2D5491'], [167.5, 12, '#0F4C8A']
@@ -322,148 +473,535 @@
     `<text x='100' y='98' text-anchor='middle' textLength='168' lengthAdjust='spacingAndGlyphs' font-family='Georgia,Times New Roman,serif' font-size='21' fill='#111111'>9 D<tspan font-size='16'>OTS</tspan> C<tspan font-size='16'>ONSULTING</tspan></text>` +
     LOGO_DOTS.map(([x, r, c]) => `<ellipse cx='${x}' cy='123' rx='${r}' ry='${r * .72}' fill='${c}'/>`).join('') +
     `</svg>`);
-
   document.querySelectorAll('img.logo').forEach(i => { i.src = LOGO; });
-  $('parade').src = PARADE;
 
   // ---------- storage (per-viewer convenience only) ----------
   const store = {
     get(k) { try { return localStorage.getItem('bottle.' + k) || ''; } catch (e) { return ''; } },
     set(k, v) { try { localStorage.setItem('bottle.' + k, v); } catch (e) { /* ignore */ } }
   };
+
+  // ---------- state ----------
+  const st = {
+    mode: 'SOLO', colours: [4, 5, 6].includes(+store.get('colours')) ? +store.get('colours') : 6,
+    p1: '', p2: '', team: '', secret: [], guess: [0, 0, 0, 0], history: [],
+    turn: 1, seat: 1, mySeat: 1, win: false, over: false, localFirst: 1, session: []
+  };
+  const clean = (v, fallback) => (v || '').trim().toUpperCase().replace(/\s+/g, ' ').slice(0, 20) || fallback;
+  const seatName = s => s === 1 ? st.p1 : st.p2;
+  const myName = () => clean($('inName').value, 'PLAYER');
+
   $('inName').value = store.get('p1');
   $('inP2').value = store.get('p2');
   $('inTeam').value = store.get('team');
-
-  // ---------- state ----------
-  const st = { mode: 'SOLO', p1: '', p2: '', team: '', secret: [], guess: [0, 0, 0, 0], history: [], turn: 1, seat: 1, win: false };
-  const clean = (v, fallback) => (v || '').trim().toUpperCase().slice(0, 20) || fallback;
-  const seatName = s => s === 1 ? st.p1 : st.p2;
+  $('inTeamOnline').value = store.get('team');
 
   function show(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
     window.scrollTo(0, 0);
   }
+  const overlay = (id, on) => $(id).classList.toggle('on', on);
+
+  let bannerTimer;
+  function banner(msg, ms = 2600) {
+    const b = $('banner');
+    b.textContent = msg; b.classList.add('on');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => b.classList.remove('on'), ms);
+  }
+
+  let noticeAction = null;
+  function notice(title, sub, onOk, cancellable) {
+    $('lblNotice').textContent = title;
+    $('lblNoticeSub').textContent = sub || '';
+    $('btnNoticeCancel').hidden = !cancellable;
+    noticeAction = onOk || null;
+    overlay('notice', true);
+    $('btnNoticeOk').focus();
+  }
+  $('btnNoticeOk').addEventListener('click', () => { overlay('notice', false); const a = noticeAction; noticeAction = null; if (a) a(); });
+  $('btnNoticeCancel').addEventListener('click', () => { overlay('notice', false); noticeAction = null; });
+
+  // ---------- setting ----------
+  function renderSetting() {
+    document.querySelectorAll('.opt').forEach(o => {
+      const on = +o.dataset.n === st.colours;
+      o.classList.toggle('sel', on); o.setAttribute('aria-checked', on);
+    });
+    $('parade').src = parade(st.colours);
+  }
+  document.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => {
+    st.colours = +o.dataset.n; store.set('colours', st.colours); renderSetting();
+  }));
+  renderSetting();
 
   function shuffle(a) {
     const r = a.slice();
     for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
     return r;
   }
+  const makeSecret = n => shuffle(ALL_BOTTLES.slice(0, n).map(b => b.id)).slice(0, PLACES);
 
-  function newGame() {
-    st.secret = shuffle(BOTTLES.map(b => b.id)).slice(0, 4);
+  function resetBoard(secret, starter) {
+    st.secret = secret;
     st.guess = [0, 0, 0, 0];
     st.history = [];
-    st.turn = 1; st.seat = 1; st.win = false;
+    st.turn = 1; st.seat = starter || 1; st.win = false; st.over = false;
     $('lblClue').textContent = '';
-    renderGame();
-    show('scrGame');
-    if (st.mode === 'DUO') openHandoff();
   }
 
   // ---------- game rendering ----------
   const slotsEl = $('slots'), palEl = $('palette'), logEl = $('log');
-  for (let i = 0; i < 4; i++) {
+  const canAct = () => !st.over && (st.mode !== 'ONLINE' || st.seat === st.mySeat);
+
+  for (let i = 0; i < PLACES; i++) {
     const s = document.createElement('div');
     s.className = 'slot'; s.tabIndex = 0; s.setAttribute('role', 'button');
     s.innerHTML = `<span class="n">${i + 1}</span><img alt="">`;
-    s.addEventListener('click', () => { st.guess[i] = 0; renderGame(); });
+    s.addEventListener('click', () => { if (canAct() && st.guess[i]) { st.guess[i] = 0; selChanged(); } });
     s.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.click(); } });
     slotsEl.appendChild(s);
   }
-  BOTTLES.forEach(b => {
+  ALL_BOTTLES.forEach(b => {
     const p = document.createElement('button');
     p.className = 'pal'; p.dataset.id = b.id;
     p.innerHTML = `<img src="${IMG[b.id]}" alt="">${b.name}`;
     p.setAttribute('aria-label', 'Add ' + b.name + ' bottle');
-    p.addEventListener('click', () => {
-      const i = st.guess.indexOf(0);
-      if (i >= 0 && !st.guess.includes(b.id)) { st.guess[i] = b.id; renderGame(); }
-    });
+    p.addEventListener('click', () => addBottle(b.id));
     palEl.appendChild(p);
   });
 
+  function addBottle(id) {
+    if (!canAct() || id > st.colours) return;
+    const i = st.guess.indexOf(0);
+    if (i >= 0 && !st.guess.includes(id)) { st.guess[i] = id; selChanged(); }
+  }
+  function selChanged() {
+    if (st.mode === 'ONLINE') net.send({ t: 'sel', g: st.guess });
+    renderGame();
+  }
+
+  function fbNode(h, withBy) {
+    const fb = document.createElement('span'); fb.className = 'fb';
+    fb.innerHTML = `<span class="p">●${h.perfect}</span> <span class="c">○${h.colour}</span>`;
+    if (withBy) { const by = document.createElement('span'); by.className = 'by'; by.textContent = 'P' + h.seat + ' ' + seatName(h.seat); fb.appendChild(by); }
+    return fb;
+  }
+  function miniNode(guess) {
+    const mini = document.createElement('span'); mini.className = 'mini';
+    guess.forEach(id => { const im = document.createElement('img'); im.src = IMG[id]; im.alt = byId(id).name; mini.appendChild(im); });
+    return mini;
+  }
+  function recRow(h, withBy) {
+    const li = document.createElement('li');
+    const t = document.createElement('span'); t.className = 't'; t.textContent = '#' + h.turn;
+    li.append(t, miniNode(h.guess), fbNode(h, withBy));
+    return li;
+  }
+
   function renderGame() {
-    $('lblMode').textContent = st.mode === 'SOLO' ? '1P SOLO · ' + st.p1 : '2P TEAM · ' + st.team;
+    const duo = st.mode !== 'SOLO';
+    const setting = ` · ${st.colours} BOTTLES`;
+    $('lblMode').textContent = (st.mode === 'SOLO' ? '1P SOLO · ' + st.p1 : (st.mode === 'ONLINE' ? '2P ONLINE · ' : '2P TEAM · ') + st.team) + setting;
     $('lblTurn').textContent = `TURN ${Math.min(st.turn, MAX_TURNS)} / ${MAX_TURNS}`;
     const who = $('lblWho');
-    who.textContent = '';
-    if (st.mode === 'DUO') {
-      who.append(`P${st.seat} `);
-      const b = document.createElement('b'); b.textContent = seatName(st.seat); who.append(b, ' — YOUR MOVE');
+    who.textContent = ''; who.className = 'who';
+    const b = document.createElement('b');
+    if (st.mode === 'ONLINE') {
+      if (st.seat === st.mySeat) { b.textContent = seatName(st.seat); who.append('YOUR MOVE, ', b); }
+      else { who.className = 'who wait'; b.textContent = seatName(st.seat); who.append(b, ' IS MOVING… WATCH THEIR PICKS'); }
+    } else if (duo) {
+      b.textContent = seatName(st.seat); who.append(`P${st.seat} `, b, ' — YOUR MOVE');
     } else {
-      who.append('PICK 4 BOTTLES, THEN CONFIRM');
+      who.append(`PICK ${PLACES} BOTTLES, THEN CONFIRM`);
     }
+    const act = canAct();
+    $('playArea').classList.toggle('locked', !act);
     [...slotsEl.children].forEach((s, i) => {
       const id = st.guess[i];
       s.classList.toggle('filled', !!id);
       s.querySelector('img').src = id ? IMG[id] : EMPTY;
-      s.setAttribute('aria-label', `Slot ${i + 1}: ${id ? byId(id).name + ' (click to remove)' : 'empty'}`);
+      s.setAttribute('aria-label', `Place ${i + 1}: ${id ? byId(id).name : 'empty'}`);
     });
-    [...palEl.children].forEach(p => { p.disabled = st.guess.includes(+p.dataset.id) || !st.guess.includes(0); });
-    $('btnConfirm').disabled = st.guess.includes(0);
+    [...palEl.children].forEach(p => {
+      const id = +p.dataset.id;
+      p.hidden = id > st.colours;
+      p.disabled = !act || st.guess.includes(id) || !st.guess.includes(0);
+    });
+    palEl.style.gridTemplateColumns = `repeat(${st.colours}, 1fr)`;
+    palEl.style.maxWidth = (st.colours * 80) + 'px';
+    $('btnConfirm').disabled = !act || st.guess.includes(0);
+    $('btnClear').disabled = !act;
 
     logEl.innerHTML = '';
     if (!st.history.length) {
-      const li = document.createElement('li'); li.className = 'empty'; li.style.display = 'block';
-      li.textContent = 'NO GUESSES YET.'; logEl.appendChild(li);
+      const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'NO GUESSES YET.'; logEl.appendChild(li);
     }
-    st.history.slice().reverse().forEach(h => {
-      const li = document.createElement('li');
-      const t = document.createElement('span'); t.className = 't'; t.textContent = '#' + h.turn;
-      const mini = document.createElement('span'); mini.className = 'mini';
-      h.guess.forEach(id => { const im = document.createElement('img'); im.src = IMG[id]; im.alt = byId(id).name; mini.appendChild(im); });
-      const fb = document.createElement('span'); fb.className = 'fb';
-      fb.innerHTML = `<span class="p">●${h.perfect}</span> <span class="c">○${h.colour}</span>`;
-      if (st.mode === 'DUO') { const by = document.createElement('span'); by.className = 'by'; by.textContent = 'P' + h.seat + ' ' + seatName(h.seat); fb.appendChild(by); }
-      li.append(t, mini, fb);
-      logEl.appendChild(li);
-    });
+    st.history.slice().reverse().forEach(h => logEl.appendChild(recRow(h, duo)));
   }
 
-  function confirmGuess() {
-    if (st.guess.includes(0)) return;
-    const perfect = st.guess.filter((id, i) => id === st.secret[i]).length;
-    const colour = st.guess.filter(id => st.secret.includes(id)).length - perfect;
-    st.history.push({ turn: st.turn, seat: st.seat, guess: st.guess.slice(), perfect, colour });
-    if (perfect === 4) { st.win = true; return finish(); }
+  // ---------- turn logic (shared by all modes) ----------
+  function applyGuess(g) {
+    const perfect = g.filter((id, i) => id === st.secret[i]).length;
+    const colour = g.filter(id => st.secret.includes(id)).length - perfect;
+    const h = { turn: st.turn, seat: st.seat, guess: g.slice(), perfect, colour };
+    st.history.push(h);
+    if (perfect === PLACES) { st.win = true; return finish(); }
     if (st.turn >= MAX_TURNS) { st.win = false; return finish(); }
     st.turn++;
     st.guess = [0, 0, 0, 0];
     const clue = $('lblClue');
     clue.innerHTML = '';
-    const b = document.createElement('b'); b.textContent = `${perfect} BOTTLE${perfect === 1 ? '' : 'S'} IN THE RIGHT POSITION.`;
-    clue.append(b, document.createElement('br'), `${colour} MORE RIGHT COLOUR${colour === 1 ? '' : 'S'}, WRONG SLOT.`);
-    if (st.mode === 'DUO') { st.seat = st.seat === 1 ? 2 : 1; openHandoff(); }
+    const b = document.createElement('b');
+    b.textContent = `${st.mode !== 'SOLO' ? seatName(h.seat) + ': ' : ''}${perfect} BOTTLE${perfect === 1 ? '' : 'S'} IN THE RIGHT PLACE.`;
+    clue.append(b, document.createElement('br'), `${colour} MORE RIGHT COLOUR${colour === 1 ? '' : 'S'}, WRONG PLACE.`);
+    if (st.mode !== 'SOLO') st.seat = st.seat === 1 ? 2 : 1;
+    if (st.mode === 'DUO') openHandoff(h);
+    if (st.mode === 'ONLINE') {
+      banner(`${seatName(h.seat)} GUESSED ●${perfect} ○${colour} → ${st.seat === st.mySeat ? 'YOUR TURN!' : seatName(st.seat) + "'S TURN"}`);
+    }
     renderGame();
   }
 
-  function openHandoff() {
+  function confirmGuess() {
+    if (!canAct() || st.guess.includes(0)) return;
+    const g = st.guess.slice();
+    if (st.mode === 'ONLINE') net.send({ t: 'guess', g, turn: st.turn });
+    applyGuess(g);
+  }
+
+  function openHandoff(last) {
+    const hl = $('handLast'); hl.innerHTML = '';
+    if (last) {
+      const d = document.createElement('div'); d.className = 'lastres';
+      const by = document.createElement('span'); by.textContent = seatName(last.seat) + ':';
+      d.append(by, miniNode(last.guess));
+      const fb = document.createElement('span'); fb.innerHTML = `<span class="p">●${last.perfect}</span> <span class="c">○${last.colour}</span>`;
+      d.append(fb); hl.appendChild(d);
+    }
     $('lblHand').textContent = `P${st.seat} ${seatName(st.seat)}, YOUR TURN!`;
-    $('handoff').classList.add('on');
+    overlay('handoff', true);
     $('btnReady').focus();
   }
 
+  // ---------- start games ----------
+  function startSolo() {
+    st.mode = 'SOLO'; st.p1 = myName(); st.p2 = ''; st.team = ''; st.mySeat = 1;
+    store.set('p1', $('inName').value.trim());
+    resetBoard(makeSecret(st.colours), 1);
+    renderGame(); show('scrGame');
+  }
+  function startLocalDuo() {
+    st.mode = 'DUO';
+    st.p1 = clean($('inP1').value, 'PLAYER 1');
+    st.p2 = clean($('inP2').value, 'PLAYER 2');
+    st.team = clean($('inTeam').value, 'TEAM 9DOTS');
+    store.set('p1', $('inP1').value.trim()); store.set('p2', $('inP2').value.trim()); store.set('team', $('inTeam').value.trim());
+    $('inName').value = $('inP1').value;
+    resetBoard(makeSecret(st.colours), st.localFirst);
+    renderGame(); show('scrGame');
+    openHandoff(null);
+  }
+  function setLocalFirst(n) {
+    st.localFirst = n;
+    $('btnLocalFirst1').classList.toggle('sel', n === 1);
+    $('btnLocalFirst2').classList.toggle('sel', n === 2);
+  }
+  function refreshLocalFirstLabels() {
+    $('btnLocalFirst1').textContent = clean($('inP1').value, 'PLAYER 1');
+    $('btnLocalFirst2').textContent = clean($('inP2').value, 'PLAYER 2');
+  }
+
+  // ================= ONLINE (PeerJS: WebRTC peer-to-peer, public PeerJS broker for the handshake) =================
+  let net = {};
+  net.send = () => {};
+
+  function newNet(role) {
+    const n = { role, peer: null, conn: null, code: '', open: false, joined: false, leaving: false, starter: 1, timer: null };
+    n.send = msg => { try { if (n.conn && n.conn.open) n.conn.send(msg); } catch (e) { /* ignore */ } };
+    return n;
+  }
+
+  function leaveRoom(sayBye) {
+    const old = net;
+    old.leaving = true;
+    clearTimeout(old.timer);
+    if (sayBye) old.send({ t: 'bye' });
+    setTimeout(() => {
+      try { old.conn && old.conn.close(); } catch (e) { /* ignore */ }
+      try { old.peer && old.peer.destroy(); } catch (e) { /* ignore */ }
+    }, 250);
+    net = newNet(null);
+    net.send = () => {};
+  }
+
+  function goHome() {
+    overlay('handoff', false);
+    st.colours = [4, 5, 6].includes(+store.get('colours')) ? +store.get('colours') : 6;
+    renderSetting();
+    show('scrHome');
+  }
+
+  function partnerGone(title, sub) {
+    if (net.leaving) return;
+    leaveRoom(false);
+    overlay('handoff', false);
+    notice(title, sub, goHome);
+  }
+
+  const validGuess = g => Array.isArray(g) && g.length === PLACES && g.every(x => Number.isInteger(x) && x >= 0 && x <= 6);
+
+  function wireConn(c) {
+    c.on('data', m => onData(c, m));
+    c.on('close', () => {
+      if (c !== net.conn || net.leaving) return;
+      if (net.role === 'host' && $('scrLobby').classList.contains('on')) {
+        net.conn = null; net.joined = false; st.p2 = '';
+        renderLobby('PLAYER 2 LEFT. WAITING FOR SOMEONE TO JOIN…');
+        return;
+      }
+      partnerGone('CONNECTION LOST', 'YOUR TEAMMATE DISCONNECTED. THE ROOM IS CLOSED.');
+    });
+    c.on('error', () => { /* close handler covers it */ });
+  }
+
+  function onData(c, m) {
+    if (!m || typeof m !== 'object' || c !== net.conn) return;
+    switch (m.t) {
+      case 'hello': // host receives guest name
+        if (net.role !== 'host') return;
+        st.p2 = clean(String(m.name || ''), 'PLAYER 2');
+        net.joined = true;
+        net.send({ t: 'welcome', p1: st.p1, colours: st.colours });
+        renderLobby();
+        banner(`${st.p2} JOINED YOUR ROOM!`);
+        break;
+      case 'welcome': // guest is accepted
+        if (net.role !== 'guest') return;
+        clearTimeout(net.timer);
+        net.joined = true;
+        st.p1 = clean(String(m.p1 || ''), 'PLAYER 1');
+        if ([4, 5, 6].includes(m.colours)) st.colours = m.colours;
+        renderLobby();
+        break;
+      case 'full':
+        if (net.role !== 'guest') return;
+        leaveRoom(false);
+        renderLobby();
+        setGuestStatus('ROOM FULL. THIS ROOM ALREADY HAS 2 PLAYERS.', true);
+        break;
+      case 'start':
+        if (net.role !== 'guest' || !validGuess(m.secret) || ![4, 5, 6].includes(m.colours)) return;
+        startOnline(m);
+        break;
+      case 'sel':
+        if (st.mode === 'ONLINE' && !st.over && st.seat !== st.mySeat && validGuess(m.g)) { st.guess = m.g.slice(); renderGame(); }
+        break;
+      case 'guess':
+        if (st.mode === 'ONLINE' && !st.over && st.seat !== st.mySeat && validGuess(m.g) && !m.g.includes(0) && m.turn === st.turn) applyGuess(m.g);
+        break;
+      case 'lobby':
+        goLobby(`${seatName(net.role === 'host' ? 2 : 1)} WANTS A REMATCH!`);
+        break;
+      case 'bye':
+        partnerGone('YOUR TEAMMATE LEFT', 'THE ROOM IS CLOSED. CREATE A NEW ROOM TO PLAY AGAIN.');
+        break;
+    }
+  }
+
+  function createRoom() {
+    leaveRoom(false);
+    net = newNet('host');
+    st.mode = 'ONLINE'; st.mySeat = 1; st.p1 = myName(); st.p2 = '';
+    store.set('p1', $('inName').value.trim());
+    show('scrLobby');
+    renderLobby('CREATING ROOM…');
+    openHostPeer(0);
+  }
+
+  function openHostPeer(tries) {
+    if (typeof Peer === 'undefined') { renderLobby('ONLINE PLAY COULD NOT LOAD. CHECK YOUR INTERNET CONNECTION.', true); return; }
+    const my = net;
+    const code = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const peer = new Peer(ROOM_PREFIX + code, { debug: 0 });
+    my.peer = peer;
+    peer.on('open', () => {
+      if (my !== net) return;
+      my.code = code; my.open = true;
+      renderLobby();
+    });
+    peer.on('connection', c => {
+      if (my !== net) { c.close(); return; }
+      const busy = net.conn && (net.conn.open || Date.now() - net.connAt < 12000);
+      if (busy) { // room is full (or someone is mid-join): turn the extra player away
+        c.on('open', () => { try { c.send({ t: 'full' }); } catch (e) { /* ignore */ } setTimeout(() => c.close(), 400); });
+        return;
+      }
+      net.conn = c; net.connAt = Date.now(); net.joined = false;
+      wireConn(c);
+    });
+    peer.on('error', err => {
+      if (my !== net) return;
+      if (err.type === 'unavailable-id' && tries < 6) { try { peer.destroy(); } catch (e) { /* ignore */ } openHostPeer(tries + 1); return; }
+      if (err.type === 'peer-unavailable') return;
+      renderLobby('ROOM ERROR: ' + String(err.type || 'UNKNOWN').toUpperCase() + '. TRY AGAIN.', true);
+    });
+    peer.on('disconnected', () => { if (my === net && !my.leaving) { try { peer.reconnect(); } catch (e) { /* ignore */ } } });
+  }
+
+  function openJoin(prefill) {
+    leaveRoom(false);
+    net = newNet('guest');
+    st.mode = 'ONLINE'; st.mySeat = 2; st.p1 = '';
+    $('inNameJoin').value = $('inName').value;
+    $('inCode').value = prefill || '';
+    show('scrLobby');
+    renderLobby();
+    setGuestStatus(prefill ? 'INVITED TO ROOM ' + prefill + '. CHECK YOUR NAME, THEN PRESS JOIN.' : '');
+    setTimeout(() => (prefill || !$('inNameJoin').value ? $('inNameJoin') : $('inCode')).focus(), 50);
+  }
+
+  function setGuestStatus(msg, err) {
+    const s = $('lblGuestStatus'); s.textContent = msg || ''; s.classList.toggle('err', !!err);
+  }
+
+  function joinRoom() {
+    const code = $('inCode').value.replace(/\D/g, '');
+    if (code.length !== 4) { setGuestStatus('ENTER ALL 4 DIGITS.', true); return; }
+    if (typeof Peer === 'undefined') { setGuestStatus('ONLINE PLAY COULD NOT LOAD. CHECK YOUR INTERNET CONNECTION.', true); return; }
+    if (net.peer) leaveRoom(false);
+    net = newNet('guest');
+    const my = net;
+    my.code = code;
+    $('inName').value = $('inNameJoin').value;
+    store.set('p1', $('inNameJoin').value.trim());
+    st.p2 = clean($('inNameJoin').value, 'PLAYER 2');
+    setGuestStatus('CONNECTING TO ROOM ' + code + '…');
+    renderLobby();
+    const peer = new Peer({ debug: 0 });
+    my.peer = peer;
+    peer.on('open', () => {
+      if (my !== net) return;
+      const c = peer.connect(ROOM_PREFIX + code, { reliable: true });
+      my.conn = c;
+      wireConn(c);
+      c.on('open', () => { if (my === net) c.send({ t: 'hello', name: st.p2 }); });
+    });
+    peer.on('error', err => {
+      if (my !== net) return;
+      clearTimeout(my.timer);
+      const msg = err.type === 'peer-unavailable' ? 'ROOM ' + code + ' NOT FOUND. CHECK THE CODE.' : 'CONNECTION ERROR: ' + String(err.type || 'UNKNOWN').toUpperCase();
+      leaveRoom(false); net = newNet('guest');
+      renderLobby();
+      setGuestStatus(msg, true);
+    });
+    my.timer = setTimeout(() => {
+      if (my !== net || my.joined) return;
+      leaveRoom(false); net = newNet('guest');
+      renderLobby();
+      setGuestStatus('COULD NOT CONNECT. THE ROOM MAY BE FULL OR CLOSED, OR YOUR NETWORK BLOCKS PEER-TO-PEER.', true);
+    }, 15000);
+  }
+
+  function renderLobby(hostMsg, isErr) {
+    const host = net.role === 'host';
+    $('hostBox').hidden = !host;
+    $('guestBox').hidden = host;
+    $('lblLobbyTitle').textContent = host ? 'CREATE ROOM' : 'JOIN ROOM';
+    $('lblLobbyCrumb').textContent = `2P ONLINE · ${st.colours} BOTTLES`;
+    if (host) {
+      $('lblCode').textContent = net.code || '····';
+      const s = $('lblHostStatus'); s.innerHTML = ''; s.classList.toggle('err', !!isErr);
+      const ready = !!(net.conn && net.conn.open && net.joined);
+      if (hostMsg) s.textContent = hostMsg;
+      else if (!net.open) s.textContent = 'CREATING ROOM…';
+      else if (!ready) { const d = document.createElement('span'); d.className = 'dot'; s.append(d, 'WAITING FOR PLAYER 2… SHARE THE CODE.'); }
+      else { const b = document.createElement('b'); b.textContent = st.p2; s.append('P2 ', b, ' JOINED! ROOM IS FULL (2/2).'); }
+      $('starterBox').hidden = !ready;
+      $('btnStartOnline').disabled = !ready;
+      $('btnCopyInvite').disabled = !net.open;
+      $('btnFirstMe').textContent = 'ME (' + st.p1 + ')';
+      $('btnFirstThem').textContent = st.p2 || 'P2';
+      $('btnFirstMe').classList.toggle('sel', net.starter === 1);
+      $('btnFirstThem').classList.toggle('sel', net.starter === 2);
+    } else {
+      const joined = !!net.joined;
+      $('inCode').disabled = joined || !!net.peer;
+      $('inNameJoin').disabled = joined || !!net.peer;
+      $('btnJoin').disabled = joined || !!net.peer;
+      if (joined) setGuestStatus(`CONNECTED TO ${st.p1}'S ROOM ${net.code} (2/2). WAITING FOR ${st.p1} TO START…`);
+    }
+  }
+
+  function goLobby(msg) {
+    overlay('handoff', false);
+    show('scrLobby');
+    renderLobby();
+    if (msg) banner(msg);
+  }
+
+  function hostStart() {
+    if (net.role !== 'host' || !(net.conn && net.conn.open)) return;
+    st.team = clean($('inTeamOnline').value, 'TEAM 9DOTS');
+    store.set('team', $('inTeamOnline').value.trim());
+    const m = { t: 'start', secret: makeSecret(st.colours), colours: st.colours, starter: net.starter, p1: st.p1, p2: st.p2, team: st.team };
+    net.send(m);
+    startOnline(m);
+  }
+
+  function startOnline(m) {
+    st.mode = 'ONLINE';
+    st.colours = m.colours;
+    st.p1 = clean(String(m.p1 || ''), 'PLAYER 1'); st.p2 = clean(String(m.p2 || ''), 'PLAYER 2');
+    st.team = clean(String(m.team || ''), 'TEAM 9DOTS');
+    resetBoard(m.secret.slice(), m.starter === 2 ? 2 : 1);
+    renderGame(); show('scrGame');
+    banner(st.seat === st.mySeat ? 'GAME ON! YOU START.' : `GAME ON! ${seatName(st.seat)} STARTS.`);
+  }
+
   // ---------- result ----------
+  const commentFor = () => st.win ? (COMMENTS[st.history.length] || 'WELL DONE!') : FAIL_COMMENT;
+
   async function finish() {
-    $('handoff').classList.remove('on');
+    st.over = true;
+    overlay('handoff', false);
     const t = st.history.length;
+    st.session.push({ mode: st.mode, win: st.win, turns: t, colours: st.colours });
     const title = $('lblResTitle');
     title.className = 'restitle' + (st.win ? ' win' : '');
-    title.textContent = st.win ? '★ CODE CRACKED! ★' : 'GAME OVER — THE BOTTLES WIN';
+    title.textContent = st.win ? `CODE CRACKED IN ${t} ROUND${t === 1 ? '' : 'S'}!` : 'GAME OVER — THE BOTTLES WIN';
+    $('lblComment').textContent = commentFor();
     $('toast').textContent = '';
+    $('lblAgainStatus').textContent = '';
+    $('btnAgain').textContent = st.mode === 'SOLO' ? 'PLAY AGAIN ▶' : 'RESTART ▶';
+    const rec = $('rec'); rec.innerHTML = '';
+    st.history.forEach(h => rec.appendChild(recRow(h, st.mode !== 'SOLO')));
+    const sess = $('sess'); sess.innerHTML = '';
+    st.session.forEach((g, i) => {
+      const li = document.createElement('li');
+      if (g.win) li.className = 'w';
+      li.textContent = `GAME ${i + 1}: ${g.win ? 'CRACKED IN ' + g.turns : 'NOT CRACKED'} · ${g.colours} BOTTLES`;
+      sess.appendChild(li);
+    });
     show('scrResult');
     await drawCard();
   }
 
+  function restart() {
+    if (st.mode === 'SOLO') return startSolo();
+    if (st.mode === 'DUO') { resetBoard(makeSecret(st.colours), st.localFirst); renderGame(); show('scrGame'); openHandoff(null); return; }
+    if (!(net.conn && net.conn.open)) { notice('ROOM CLOSED', 'YOUR TEAMMATE IS NO LONGER CONNECTED.', goHome); return; }
+    net.send({ t: 'lobby' });
+    goLobby(net.role === 'host' ? 'PICK WHO STARTS, THEN PRESS START.' : `WAITING FOR ${st.p1} TO START THE REMATCH…`);
+  }
+
   function shareText() {
     const t = st.history.length;
-    const who = st.mode === 'DUO' ? `Team ${st.team} (${st.p1} + ${st.p2})` : st.p1;
+    const who = st.mode !== 'SOLO' ? `Team ${st.team} (${st.p1} + ${st.p2})` : st.p1;
     const res = st.win
-      ? ` cracked the secret bottle order in ${t} turn${t === 1 ? '' : 's'}!`
-      : ` couldn't crack the code in ${MAX_TURNS} turns... the bottles win this round.`;
-    return `GUESS THE BOTTLE ORDER · 9 DOTS CONSULTING\n${who}${res}\nCan you beat ${st.mode === 'DUO' ? 'us' : 'me'}? Play: ${pageUrl()}`;
+      ? ` cracked the secret bottle order in ${t} round${t === 1 ? '' : 's'} (${st.colours} bottles)! ${commentFor()}`
+      : ` couldn't crack the code in ${MAX_TURNS} rounds... the bottles win this time.`;
+    return `GUESS THE BOTTLE ORDER · 9 DOTS CONSULTING\n${who}${res}\nCan you beat ${st.mode !== 'SOLO' ? 'us' : 'me'}? Play: ${pageUrl()}`;
   }
   const pageUrl = () => location.href.split('#')[0].split('?')[0];
 
@@ -483,15 +1021,15 @@
     ctx.scale(k, k);
     ctx.beginPath(); ctx.arc(100, 100, 95, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = '#1F4E86'; ctx.stroke();
-    ctx.fillStyle = '#111111'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#111111';
     const parts = [['9 D', 21], ['OTS', 16], [' C', 21], ['ONSULTING', 16]];
-    const widthOf = () => parts.reduce((w, [s, f]) => { ctx.font = `${f}px Georgia, "Times New Roman", serif`; return w + ctx.measureText(s).width; }, 0);
-    const scaleX = 168 / widthOf();
-    ctx.save(); ctx.translate(16, 98); ctx.scale(scaleX, 1);
+    const font = f => `${f}px Georgia, "Times New Roman", serif`;
+    const total = parts.reduce((w, [s, f]) => { ctx.font = font(f); return w + ctx.measureText(s).width; }, 0);
+    ctx.save(); ctx.translate(16, 98); ctx.scale(168 / total, 1);
     let x = 0;
-    parts.forEach(([s, f]) => { ctx.font = `${f}px Georgia, "Times New Roman", serif`; ctx.fillText(s, x, 0); x += ctx.measureText(s).width; });
+    parts.forEach(([s, f]) => { ctx.font = font(f); ctx.fillText(s, x, 0); x += ctx.measureText(s).width; });
     ctx.restore();
-    LOGO_DOTS.forEach(([x, r, c]) => { ctx.beginPath(); ctx.ellipse(x, 123, r, r * .72, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
+    LOGO_DOTS.forEach(([dx, r, c]) => { ctx.beginPath(); ctx.ellipse(dx, 123, r, r * .72, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
     ctx.restore();
   }
 
@@ -501,64 +1039,82 @@
     const PX = '"Press Start 2P", "Courier New", monospace';
     const t = st.history.length;
     const fit = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
-    ctx.imageSmoothingEnabled = false;
+    const text = (s, x, y, size, col) => { ctx.font = `${size}px ${PX}`; ctx.fillStyle = col; ctx.fillText(s, x, y); };
     ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, 720, 450);
     ctx.fillStyle = '#0B1440'; ctx.fillRect(12, 12, 696, 426);
     ctx.lineWidth = 8; ctx.strokeStyle = '#1E4DFF'; ctx.strokeRect(16, 16, 688, 418);
     drawLogo(ctx, 66, 62, 68);
-    const text = (s, x, y, size, col) => { ctx.font = `${size}px ${PX}`; ctx.fillStyle = col; ctx.fillText(s, x, y); };
     text('GUESS THE BOTTLE ORDER', 112, 68, 14, '#7A95FF');
-    text(st.win ? 'CODE CRACKED!' : 'GAME OVER', 36, 142, 32, st.win ? '#FFD60A' : '#FFFFFF');
-    text(st.win ? `IN ${t} TURN${t === 1 ? '' : 'S'} / ${MAX_TURNS}` : `USED ALL ${MAX_TURNS} TURNS`, 36, 184, 16, '#FFFFFF');
-    if (st.mode === 'DUO') {
+    text(st.win ? 'CODE CRACKED!' : 'GAME OVER', 36, 140, 32, st.win ? '#FFD60A' : '#FFFFFF');
+    text(st.win ? `IN ${t} ROUND${t === 1 ? '' : 'S'} / ${MAX_TURNS}` : `USED ALL ${MAX_TURNS} ROUNDS`, 36, 178, 14, '#FFFFFF');
+    text(commentFor(), 36, 206, 12, '#FFD60A');
+    if (st.mode !== 'SOLO') {
       const g1 = st.history.filter(h => h.seat === 1).length, g2 = st.history.filter(h => h.seat === 2).length;
-      text('TEAM', 36, 238, 11, '#7A95FF');
-      text(fit(st.team, 18), 36, 266, 16, '#FFFFFF');
-      text('P1 ' + fit(st.p1, 18), 36, 310, 12, '#FFFFFF');
-      text(`   ${g1} GUESS${g1 === 1 ? '' : 'ES'}`, 36, 332, 10, '#7A95FF');
-      text('P2 ' + fit(st.p2, 18), 36, 366, 12, '#FFFFFF');
-      text(`   ${g2} GUESS${g2 === 1 ? '' : 'ES'}`, 36, 388, 10, '#7A95FF');
+      text('TEAM', 36, 248, 11, '#7A95FF');
+      text(fit(st.team, 18), 36, 274, 16, '#FFFFFF');
+      text('P1 ' + fit(st.p1, 18), 36, 314, 12, '#FFFFFF');
+      text(`   ${g1} GUESS${g1 === 1 ? '' : 'ES'}`, 36, 336, 10, '#7A95FF');
+      text('P2 ' + fit(st.p2, 18), 36, 368, 12, '#FFFFFF');
+      text(`   ${g2} GUESS${g2 === 1 ? '' : 'ES'}`, 36, 390, 10, '#7A95FF');
     } else {
-      text('PLAYER', 36, 238, 11, '#7A95FF');
-      text(fit(st.p1, 18), 36, 268, 16, '#FFFFFF');
+      text('PLAYER', 36, 248, 11, '#7A95FF');
+      text(fit(st.p1, 18), 36, 276, 16, '#FFFFFF');
     }
-    text('SECRET CODE', 450, 224, 11, '#7A95FF');
-    st.secret.forEach((id, i) => drawBottle(ctx, 450 + i * 60, 240, 4, byId(id).hex));
+    text('SECRET CODE', 450, 234, 11, '#7A95FF');
+    st.secret.forEach((id, i) => drawBottle(ctx, 450 + i * 60, 250, 4, byId(id).hex));
     const d = new Date();
     const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    text(`${ds} · CAN YOU BEAT ${st.mode === 'DUO' ? 'US' : 'ME'}?`, 36, 418, 10, '#7A95FF');
+    text(`${ds} · ${st.colours} BOTTLES · CAN YOU BEAT ${st.mode !== 'SOLO' ? 'US' : 'ME'}?`, 36, 418, 9, '#7A95FF');
   }
 
   function toast(msg) { $('toast').textContent = msg; }
 
   // ---------- events ----------
-  $('btnSolo').addEventListener('click', () => {
-    st.mode = 'SOLO'; st.p1 = clean($('inName').value, 'PLAYER 1'); st.p2 = ''; st.team = '';
-    store.set('p1', $('inName').value.trim());
-    newGame();
-  });
-  $('btnDuo').addEventListener('click', () => {
-    store.set('p1', $('inName').value.trim());
+  $('btnSolo').addEventListener('click', startSolo);
+  $('btnDuo').addEventListener('click', () => { store.set('p1', $('inName').value.trim()); overlay('duoPick', true); $('btnCreate').focus(); });
+  $('btnDuoCancel').addEventListener('click', () => overlay('duoPick', false));
+  $('btnCreate').addEventListener('click', () => { overlay('duoPick', false); createRoom(); });
+  $('btnJoinRoom').addEventListener('click', () => { overlay('duoPick', false); openJoin(''); });
+  $('btnSameDevice').addEventListener('click', () => {
+    overlay('duoPick', false);
     $('inP1').value = $('inName').value;
+    refreshLocalFirstLabels();
     show('scrTeam');
     ($('inP1').value ? $('inP2') : $('inP1')).focus();
   });
+  ['inP1', 'inP2'].forEach(id => $(id).addEventListener('input', refreshLocalFirstLabels));
+  $('btnLocalFirst1').addEventListener('click', () => setLocalFirst(1));
+  $('btnLocalFirst2').addEventListener('click', () => setLocalFirst(2));
   $('btnBackTeam').addEventListener('click', () => show('scrHome'));
-  $('btnStartDuo').addEventListener('click', () => {
-    st.mode = 'DUO';
-    st.p1 = clean($('inP1').value, 'PLAYER 1');
-    st.p2 = clean($('inP2').value, 'PLAYER 2');
-    st.team = clean($('inTeam').value, 'TEAM 9DOTS');
-    store.set('p1', $('inP1').value.trim()); store.set('p2', $('inP2').value.trim()); store.set('team', $('inTeam').value.trim());
-    $('inName').value = $('inP1').value;
-    newGame();
+  $('btnStartDuo').addEventListener('click', startLocalDuo);
+
+  $('btnFirstMe').addEventListener('click', () => { net.starter = 1; renderLobby(); });
+  $('btnFirstThem').addEventListener('click', () => { net.starter = 2; renderLobby(); });
+  $('btnStartOnline').addEventListener('click', hostStart);
+  $('btnJoin').addEventListener('click', joinRoom);
+  $('inCode').addEventListener('input', () => { $('inCode').value = $('inCode').value.replace(/\D/g, '').slice(0, 4); setGuestStatus(''); });
+  $('inCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
+  $('inNameJoin').addEventListener('keydown', e => { if (e.key === 'Enter') $('inCode').focus(); });
+  $('btnLeaveHost').addEventListener('click', () => { leaveRoom(true); goHome(); });
+  $('btnLeaveGuest').addEventListener('click', () => { leaveRoom(true); goHome(); });
+  $('btnCopyInvite').addEventListener('click', async () => {
+    const txt = `Join my Guess the Bottle Order room! Code: ${net.code}\n${pageUrl()}?room=${net.code}`;
+    try { await navigator.clipboard.writeText(txt); banner('INVITE COPIED! PASTE IT IN TEAMS.'); }
+    catch (e) { banner('ROOM CODE: ' + net.code); }
   });
-  $('btnClear').addEventListener('click', () => { st.guess = [0, 0, 0, 0]; renderGame(); });
+
+  $('btnClear').addEventListener('click', () => { if (canAct()) { st.guess = [0, 0, 0, 0]; selChanged(); } });
   $('btnConfirm').addEventListener('click', confirmGuess);
-  $('btnReady').addEventListener('click', () => $('handoff').classList.remove('on'));
-  $('btnQuit').addEventListener('click', () => { if (confirm('Quit this game?')) show('scrHome'); });
-  $('btnAgain').addEventListener('click', newGame);
-  $('btnMenu').addEventListener('click', () => show('scrHome'));
+  $('btnReady').addEventListener('click', () => overlay('handoff', false));
+  $('btnQuit').addEventListener('click', () => {
+    const online = st.mode === 'ONLINE';
+    notice('QUIT THIS GAME?', online ? 'THIS CLOSES THE ROOM FOR YOUR TEAMMATE TOO.' : 'YOUR PROGRESS IN THIS GAME WILL BE LOST.', () => {
+      if (online) leaveRoom(true);
+      goHome();
+    }, true);
+  });
+  $('btnAgain').addEventListener('click', restart);
+  $('btnMenu').addEventListener('click', () => { if (st.mode === 'ONLINE') leaveRoom(true); goHome(); });
 
   $('btnTeams').addEventListener('click', () => {
     window.open('https://teams.microsoft.com/share?href=' + encodeURIComponent(pageUrl()) +
@@ -580,7 +1136,7 @@
     toast('CARD SAVED. ATTACH IT IN TEAMS!');
   });
   if (navigator.share) {
-    const nb = $('btnNative'); nb.style.display = 'block';
+    const nb = $('btnNative'); nb.hidden = false;
     nb.addEventListener('click', async () => {
       try {
         const blob = await new Promise(r => $('card').toBlob(r, 'image/png'));
@@ -591,19 +1147,26 @@
       } catch (e) { /* user cancelled */ }
     });
   }
-  document.querySelectorAll('input[type=text]').forEach(inp => inp.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    if (inp.id === 'inName') $('btnSolo').click();
-    else $('btnStartDuo').click();
-  }));
-  // keyboard: 1-6 add bottles, Backspace removes last, Enter confirms
+  ['inName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') startSolo(); }));
+  ['inP1', 'inP2', 'inTeam'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') startLocalDuo(); }));
+
+  // keyboard: 1-6 add bottles, Backspace removes the last, Enter confirms
   document.addEventListener('keydown', e => {
-    if (!$('scrGame').classList.contains('on') || $('handoff').classList.contains('on')) return;
+    if (!$('scrGame').classList.contains('on') || document.querySelector('.overlay.on')) return;
     if (e.target.tagName === 'INPUT') return;
-    if (/^[1-6]$/.test(e.key)) palEl.children[+e.key - 1].click();
-    else if (e.key === 'Backspace') { const i = st.guess.map(Boolean).lastIndexOf(true); if (i >= 0) { st.guess[i] = 0; renderGame(); } }
-    else if (e.key === 'Enter' && !$('btnConfirm').disabled && document.activeElement.tagName !== 'BUTTON') confirmGuess();
+    if (/^[1-6]$/.test(e.key)) addBottle(+e.key);
+    else if (e.key === 'Backspace' && canAct()) { const i = st.guess.map(Boolean).lastIndexOf(true); if (i >= 0) { st.guess[i] = 0; selChanged(); } }
+    else if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') confirmGuess();
   });
+
+  window.addEventListener('beforeunload', () => { if (net.conn) net.send({ t: 'bye' }); });
+
+  // invite links: ?room=0248 opens Join Room with the code filled in
+  const roomParam = new URLSearchParams(location.search).get('room');
+  if (roomParam && /^\d{4}$/.test(roomParam)) {
+    history.replaceState(null, '', pageUrl());
+    openJoin(roomParam);
+  }
 })();
 </script>
 </body>
